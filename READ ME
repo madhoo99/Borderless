@@ -1,0 +1,3 @@
+config to change camera input
+init initialises program with overlaid gif (instructions for people to show AR card)
+aruco detector handles AR marker detection 
