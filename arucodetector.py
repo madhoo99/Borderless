@@ -16,9 +16,9 @@ ap.add_argument("-t", "--type", type=str,
 args = vars(ap.parse_args())
 
 #get screen res
-size = pyautogui.size()
-w = size[0] - 200
-h = size[1]
+# size = pyautogui.size()
+# w = size[0] - 200
+# h = size[1]
 
 
 #define names of each possible ArUco tag OpenCV supports
@@ -70,12 +70,17 @@ emoji6 = cv2.imread("emoji/emoji6.png")
 
 #initialize the video stream and allow the camera sensor to warm up
 print('[INFO] starting video stream...')
-vs = VideoStream(src=config.camera).start()
+#vs = VideoStream(src=config.camera).start()
+cap = cv2.VideoCapture(1)
+
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cap.set(cv2.CAP_PROP_FPS, 30)
 time.sleep(2.0) #time for camera to warm up
 
 #initialise arrow animations
-startarrow = cv2.VideoCapture('arrows/start.mp4')
-endarrow = cv2.VideoCapture('arrows/end.mp4')
+# startarrow = cv2.VideoCapture('arrows/start.mp4')
+# endarrow = cv2.VideoCapture('arrows/end.mp4')
 
 # Load the cascade
 # face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -84,10 +89,26 @@ flag=1
 
 #loop over frames from video stream
 while True:
+    #time.sleep(0.01)
+
+
 
     #grab the frame from the threaded video stream and resize to screen resolution
-    frame = vs.read()
-    frame = cv2.resize(frame, (w,h))
+    #frame = vs.read()
+    # frame = cv2.resize(frame, (w,h))
+
+    
+    
+
+    r, frame = cap.read()
+
+    #print('Resolution: ' + str(frame.shape[0] + ' x ' + str(frame.shape[1])))
+    # w = frame.shape[0]
+    # h = frame.shape[1]
+
+    
+    # print(w, h)
+
 
     #detect Aruco markers in the input frame
     (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict, parameters = arucoParams)
@@ -212,7 +233,7 @@ while True:
 
 #cleanup
 cv2.destroyAllWindows()
-vs.stop()
+cap.stop()
     
 
 
