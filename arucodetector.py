@@ -71,7 +71,7 @@ emoji6 = cv2.imread("emoji/emoji6.png")
 #initialize the video stream and allow the camera sensor to warm up
 print('[INFO] starting video stream...')
 #vs = VideoStream(src=config.camera).start()
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -86,6 +86,12 @@ time.sleep(2.0) #time for camera to warm up
 # face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
 flag=1
+
+def zoom(scale, frame):
+    w = frame.shape[1]
+    h = frame.shape[0]
+    frame = cv2.resize(frame, (w * scale, h * scale))
+    return frame
 
 #loop over frames from video stream
 while True:
@@ -103,9 +109,18 @@ while True:
     r, frame = cap.read()
 
     #print('Resolution: ' + str(frame.shape[0] + ' x ' + str(frame.shape[1])))
-    # w = frame.shape[0]
-    # h = frame.shape[1]
+    
+    frame = cv2.rotate(frame, cv2.ROTATE_180)
+    scale = 1.55
+    #frame = zoom(3, frame)
 
+    w = frame.shape[1]
+    h = frame.shape[0]
+    frame = cv2.resize(frame, (int(w * scale), int(h * scale)))
+
+    print(frame.shape[1])
+
+    frame = frame[200:, :(frame.shape[1] - 1150)]
     
     # print(w, h)
 
