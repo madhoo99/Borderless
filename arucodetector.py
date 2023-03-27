@@ -95,7 +95,7 @@ def zoom(scale, frame):
 
 #loop over frames from video stream
 while True:
-    #time.sleep(0.01)
+    # time.sleep(0.01)
 
 
 
