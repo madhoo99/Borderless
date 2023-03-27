@@ -97,8 +97,6 @@ def zoom(scale, frame):
 while True:
     # time.sleep(0.01)
 
-
-
     #grab the frame from the threaded video stream and resize to screen resolution
     #frame = vs.read()
     # frame = cv2.resize(frame, (w,h))
