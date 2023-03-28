@@ -1,3 +1,4 @@
+from datetime import datetime
 import cv2
 import numpy as np
 from imutils.video import VideoStream
@@ -6,7 +7,11 @@ import time
 import sys
 import pyautogui
 import math
+
+import pytz
 import config
+from dateutil.relativedelta import relativedelta
+import keyboard
 
 #construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -71,7 +76,7 @@ emoji6 = cv2.imread("emoji/emoji6.png")
 #initialize the video stream and allow the camera sensor to warm up
 print('[INFO] starting video stream...')
 #vs = VideoStream(src=config.camera).start()
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -93,9 +98,26 @@ def zoom(scale, frame):
     frame = cv2.resize(frame, (w * scale, h * scale))
     return frame
 
+start_time = datetime.now(pytz.utc)
+duration = 30
+scale =  1.35 #1.55
+width = 200
+height = 800
+
 #loop over frames from video stream
 while True:
     #time.sleep(0.01)
+
+    curr_time = datetime.now(pytz.utc)
+
+    # if start_time + relativedelta(seconds=duration) > curr_time:
+    if keyboard.is_pressed('p'):
+        scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
+        width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
+        height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
+        # duration = int(input('Enter duration: ') or str(duration))
+        
+        # start_time = datetime.now(pytz.utc)
 
 
 
@@ -111,7 +133,7 @@ while True:
     #print('Resolution: ' + str(frame.shape[0] + ' x ' + str(frame.shape[1])))
     
     frame = cv2.rotate(frame, cv2.ROTATE_180)
-    scale = 1.55
+    
     #frame = zoom(3, frame)
 
     w = frame.shape[1]
@@ -120,7 +142,10 @@ while True:
 
     print(frame.shape[1])
 
-    frame = frame[200:, :(frame.shape[1] - 1150)]
+    # success with asus webcam
+    # frame = frame[200:, :(frame.shape[1] - 1150)]
+
+    frame = frame[width:, :(frame.shape[1] - height)]
     
     # print(w, h)
 
