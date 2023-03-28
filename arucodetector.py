@@ -119,8 +119,6 @@ while True:
         
         # start_time = datetime.now(pytz.utc)
 
-
-
     #grab the frame from the threaded video stream and resize to screen resolution
     #frame = vs.read()
     # frame = cv2.resize(frame, (w,h))
