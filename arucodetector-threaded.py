@@ -8,21 +8,154 @@ import time
 import sys
 import pyautogui
 import math
+import base64
+import io
+from PIL import Image, ImageDraw, ImageFont
+import requests 
 
 import pytz
 import config
 from dateutil.relativedelta import relativedelta
 import keyboard
 
-state = Value('i', 0)
+state = Value('i', 1)
+
+# state1, state2, drawing1, drawing2, emoji1, emoji2, all provided at the same time, but some may be null values if not updated by user yet.
+
+#retrieve data from the app and set the states accordingly in openCV
 
 def talker_thread(state):
-    i = 0
-    while i < 5:
-        time.sleep(5)
-        i += 1
-        state.value = i
+    url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
+    # print(url_id) 
 
+    url = 'https://borderless-backend.herokuapp.com/openCVData?id='
+    url += url_id['id']
+    # print(url)
+
+    data = requests.get(url).json()
+    print(data)
+    
+    # i = 0
+    # while i < 5:
+    #     time.sleep(5)
+    #     i += 1
+    #     state.value = i
+
+#display qr code for people to scan
+def state0(frame):
+    pass
+
+
+#start frame 1 - welcome message
+def state1(frame):
+    cv2.putText(frame, 'Welcome! Press start on device to begin.', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+
+#start frame 2 - waiting for other user
+def state2(frame):
+    cv2.putText(frame, 'Waiting for other player...', (50,100),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+
+#prompt
+def state3(frame):
+    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+
+#drawing - user is drawing message
+def state4(frame):
+    pass
+
+#drawing - display of drawings on ar markers
+def state5(frame, cX, cY, imgl2):
+    #1. convert retrieved drawings' dataURLs to image file
+    
+    # decode the base64 string
+    file = open('fyp test codes/file1.txt')
+    base64_string = file.read()
+    file.close()
+
+    #pad the string with '=' to make the length a multiple of 4
+    while len(base64_string) % 4 != 0:
+        base64_string += "="
+
+    # Remove the "data:image/png;base64," prefix from the string
+    base64_string = base64_string.replace("data:image/png;base64,", "")
+
+    image_data = base64.b64decode(base64_string)
+
+    # open the image using PIL
+    drawing = Image.open(io.BytesIO(image_data))
+
+    # save the image as a PNG file
+    drawing.save("output.png", "PNG")
+
+    # load and initialise output png
+    img = cv2.imread('output.png')
+    cv2.imshow('image', img)
+    img = cv2.resize(img, (imgl2*2,imgl2*2))
+
+    w = frame.shape[1]
+    h = frame.shape[0]
+
+    #blank frame to place image on
+    frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+                        
+    if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
+        # frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
+        frameImg[cY-imgl2:cY+imgl2, cX-imgl2:cX+imgl2] = img
+
+    frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
+    frame += frameImg
+
+# display react prompt
+def state6(frame):
+    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+    cv2.putText(frame, "React to the other user's drawing!", (50,100),
+                cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
+    cv2.putText(frame, "Feel free to use gestures, facial expressions, or emojis.", (50,130),
+                cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
+    
+
+# display emojis
+def state7(frame):
+    # Load the font file
+    font_file = 'fyp test codes\seguiemj.ttf'
+    font_size = 150
+    font = ImageFont.truetype(font_file, font_size)
+
+    # Create a new RGBA image with a transparent background
+    width, height = 200, 200
+    image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+
+    #Retrieve emoji text from backend
+    text = '😀❤☃'
+
+    # Get the bounding box of the text
+    bbox = font.getbbox(text)
+
+    # Create a new image with dimensions based on the bounding box
+    image = Image.new("RGBA", (bbox[2] - bbox[0], bbox[3] - bbox[1]), (255, 255, 255, 0))
+
+    # Draw the text on the image
+    draw = ImageDraw.Draw(image)
+    draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
+
+    # Save the image to disk
+    image.save('colored_emoji.png')
+
+    #load and initialise emoji image in openCV
+    cv2.imread('colored_emoji.png')
+
+
+# display thank you message
+def state8(frame):
+    cv2.putText(frame, 'Thank you for playing!', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+    cv2.putText(frame, 'Check out the archive wall outside.', (50,100),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+
+#loop that is running the aruco program
 def aruco_thread(state):
     #construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
@@ -94,13 +227,6 @@ def aruco_thread(state):
     cap.set(cv2.CAP_PROP_FPS, 30)
     time.sleep(2.0) #time for camera to warm up
 
-    #initialise arrow animations
-    # startarrow = cv2.VideoCapture('arrows/start.mp4')
-    # endarrow = cv2.VideoCapture('arrows/end.mp4')
-
-    # Load the cascade
-    # face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-
     flag=1
 
     scale =  1.35 #1.55
@@ -109,15 +235,14 @@ def aruco_thread(state):
 
     #loop over frames from video stream
     while True:
-        #time.sleep(0.01)
-
-        curr_time = datetime.now(pytz.utc)
 
         # if start_time + relativedelta(seconds=duration) > curr_time:
         if keyboard.is_pressed('p'):
-            scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
-            width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
-            height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
+            sys.stdin = open(0)
+            # scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
+            # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
+            # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
+            state.value = int(input('Enter state value: ') or str(state.value))
             # duration = int(input('Enter duration: ') or str(duration))
             
             # start_time = datetime.now(pytz.utc)
@@ -125,9 +250,6 @@ def aruco_thread(state):
         #grab the frame from the threaded video stream and resize to screen resolution
         #frame = vs.read()
         # frame = cv2.resize(frame, (w,h))
-
-        
-        
 
         r, frame = cap.read()
 
@@ -142,7 +264,7 @@ def aruco_thread(state):
         frame = cv2.resize(frame, (int(w * scale), int(h * scale)))
 
         #print(frame.shape[1])
-        print(state.value)
+        # print(state.value)
 
         # success with asus webcam
         # frame = frame[200:, :(frame.shape[1] - 1150)]
@@ -160,6 +282,8 @@ def aruco_thread(state):
         # faces = face_cascade.detectMultiScale(gray, 1.1, 4)
 
         #verify at least one aruco marker was detected
+        cX, cY = 0,0
+        imgl2=1
 
         if len(corners) > 0:
 
@@ -220,7 +344,7 @@ def aruco_thread(state):
                     cv2.line(frame, bottomRight, bottomLeft, (0,255,0), 2)
                     cv2.line(frame, bottomLeft, topLeft, (0,255,0), 2)
 
-                if flag == 1:
+                if flag == 1: #relevant aruco markers showing up on screen
 
                     #set size of png
                     imgl2 = int(imgl/2)
@@ -240,6 +364,8 @@ def aruco_thread(state):
                     cX = int((topLeft[0] + bottomRight[0]) / 2.0)
                     cY = int((topLeft[1] + bottomRight[1]) / 2.0)
 
+                    frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) #display a white circle on aruco marker by default
+                
                 #draw the aruco marker ID on the frame
                 # cv2.putText(frame, "Hello World",
                 #            (cX,cY), #(topLeft[0], topLeft[1]-15),
@@ -253,20 +379,39 @@ def aruco_thread(state):
                 # frame = cv2.fillConvexPoly(frame, aruco_corners, (255,255,255))
                 # frame += frame1
                 # frame = cv2.addWeighted(frame1, 1.0, frame, 1.0, 0)
+                    # w = frame.shape[1]
+                    # h = frame.shape[0]
 
-                    #blank frame to place image on
-                    frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+                    # #blank frame to place image on
+                    # frameImg = np.zeros([h, w, 3], dtype=np.uint8)
                     
-                    if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
-                        frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (0 ,0, 0), -1) 
-                        frameImg[cY-imgl2:cY+imgl2, cX-imgl2:cX+imgl2] = img
+                    # if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
+                    #     # frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
+                    #     frameImg[cY-imgl2:cY+imgl2, cX-imgl2:cX+imgl2] = img
 
                     # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
-                    frame += frameImg
-            
+                    # frame += frameImg
+        
+        if state.value ==1:
+            state1(frame)
+        elif state.value == 2:
+            state2(frame)
+        elif state.value ==3:
+            state3(frame)
+        elif state.value==4:
+            state4(frame)   
+        elif state.value ==5:
+            state5(frame, cX, cY, imgl2)
+        elif state.value ==6:
+            state6(frame)
+        elif state.value ==7:
+            state7(frame)
+        elif state.value==8:
+            state8(frame)
 
         #show the output frame
         cv2.imshow("Say Hello", frame)
+
         key = cv2.waitKey(1) & 0xFF
 
         #if the 'q' key was pressed, break from the loop
@@ -277,15 +422,10 @@ def aruco_thread(state):
     cv2.destroyAllWindows()
     cap.stop()
 
-def init_worker():
-    global state
     
 
 if __name__=='__main__':
     
-    pool = Pool(processes=2)
-    # r1 = pool.apply_async(aruco_thread, [state])
-    # r2 = pool.apply_async(talker_thread, [state])
     x = Process(target=aruco_thread, args=(state,))
     y = Process(target=talker_thread, args=(state,))
 
