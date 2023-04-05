@@ -19,25 +19,26 @@ import config
 from dateutil.relativedelta import relativedelta
 import keyboard
 
+stringSize = 1000000
+
 state = Value('i', 1)
 stateOther = Value('i', 1)
-nickname = Array('c', b'')
-nicknameOther = Array('c', b'')
-drawing = Array('c', b'')
-drawingOther = Array('c', b'')
-description = Array('c', b'')
-descriptionOther = Array('c', b'')
-emoji = Array('c', b'')
-emojiOther = Array('c', b'')
+nickname = Array('c', stringSize)
+nicknameOther = Array('c', stringSize)
+drawing = Array('c', stringSize)
+drawingOther = Array('c', stringSize)
+description = Array('c', stringSize)
+descriptionOther = Array('c', stringSize)
+emoji = Array('c', stringSize)
+emojiOther = Array('c', stringSize)
 
-urlId = Array('c', b'')
+urlId = Array('c', stringSize)
 cX = Value('i', 0)
 cY = Value('i', 0)
 cXOther = Value('i', 0)
 cYOther = Value('i', 0)
 stage = Value('i', 1)
 
-# state1, state2, drawing1, drawing2, emoji1, emoji2, all provided at the same time, but some may be null values if not updated by user yet.
 
 #retrieve data from the app and set the states accordingly in openCV
 
@@ -65,7 +66,7 @@ def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, draw
         first = True
 
         while True:
-            data = requests.get(url).json()
+            data = requests.get(url).json()['data'] 
             state.value = data['state']
             stateOther.value = data['stateOther']
             nickname.value = data['nickname'].encode('utf-8')
@@ -82,47 +83,62 @@ def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, draw
             if not first and state.value == 0 and stateOther.value == 0:
                 break
 
-            first = False
+            if state.value > 0 or stateOther.value > 0:
+                first = False
 
             time.sleep(1)
 
 def getStage(state, stateOther):
-    if state in [0, 1, 2]:
+    if state in [0, 1, 2]: # welcome message, nickname, drawing prompt
         return 1
-    if state == 3 and state > stateOther:
+    if state == 3 and state > stateOther: # 
         return 2
-    if state == 3:
+    if (state == 3 or state == 4) and (state != 5 and stateOther != 5):
         return 3
-    
-    if state == 4 and stateOther == 4:
-        return 4
-    if state == 5 and stateOther == 4:
-        return 5
-    if state == 4 and stateOther == 5:
-        return 6
     if state == 5 and stateOther == 5:
-        return 7
+        return 4
+    if state in [7,8,9]:
+        return 5
     
-    return 8
+    return -1
 
 #start frame 1 - welcome message and display QR code    // state = 0, 1, 2
-def stage1(frame):
+def stage1(frame, urlId):
     cv2.putText(frame, 'Welcome! Press start on device to begin.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
-    # URL = 'https://www.linkedin.com/in/satyaganesh6055/' #Add your URL
-    # code = QR.make(URL)
-    # code.save('QR.png')
-    # code.show()
+    URL = 'https://borderless-frontend-new.herokuapp.com/home?id=' #Add your URL
+    URL += urlId
+    print(URL)
+
+    code = QR.make(URL)
+    code.save('QR.png')
+    
+    url_img = cv2.imread('QR.png')
+    imgl2 = 200
+
+    url_img = cv2.resize(url_img, (imgl2*2,imgl2*2))
+
+    w = frame.shape[1]
+    h = frame.shape[0]
+
+    #blank frame to place image on
+    frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+
+    centerX = int(frameImg.shape[1]/2)
+    centerY = int(frameImg.shape[0]/2)
+    cv2.rectangle(frame, (centerX - imgl2, centerY + imgl2), (centerX + imgl2, centerY - imgl2), (0, 0, 0), -1)
+
+    frameImg[int(centerY- imgl2):int(centerY+ imgl2), int(centerX- imgl2):int(centerX+ imgl2)] = url_img
+
+    # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
+    frame += frameImg
+
+    
 
 #start frame 2 - waiting for other user   // stage = 3, stage > stateOther
 def stage2(frame):
     cv2.putText(frame, 'Waiting for other player...', (50,100),
-                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
-
-#prompt                                   // stage = 3
-def stage3(frame):
-    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
 # both drawing                                      // state = 4, stateOther = 4
@@ -130,71 +146,142 @@ def stage3(frame):
 # user has not finished, userOther has finished     // state = 4, stateOther = 5
 # both finished                                     // state, stateOther = 5
 
-
-#drawing - user is drawing message         
-def stage4(frame):
-    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
-                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
-    pass
-
 #drawing - display of drawings on ar markers
-def stage5(frame, cX, cY, imgl2):
-    
+def stage3(frame, cX, cY, imgl2, corners, 
+           drawing, drawingOther, nickname, nicknameOther,
+           cXOther, cYOther):
+
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
-    #1. convert retrieved drawings' dataURLs to image file
+    #1. If drawing exists, convert retrieved drawings' dataURLs to image file, else display 'nickname is drawing' message
+    # tagged to cX, cY
+
+    if drawing:
     
-    # decode the base64 string
-    file = open('fyp test codes/file1.txt')
-    base64_string = file.read()
-    file.close()
+        # decode the base64 string
+        # file = open('fyp test codes/file1.txt') #drawing)
+        # base64_string = file.read()
+        # file.close()
+        base64_string = drawing
 
-    #pad the string with '=' to make the length a multiple of 4
-    while len(base64_string) % 4 != 0:
-        base64_string += "="
+        #pad the string with '=' to make the length a multiple of 4
+        while len(base64_string) % 4 != 0:
+            base64_string += "="
 
-    # Remove the "data:image/png;base64," prefix from the string
-    base64_string = base64_string.replace("data:image/png;base64,", "")
+        # Remove the "data:image/png;base64," prefix from the string
+        base64_string = base64_string.replace("data:image/png;base64,", "")
 
-    image_data = base64.b64decode(base64_string)
+        image_data = base64.b64decode(base64_string)
 
-    # open the image using PIL
-    drawing = Image.open(io.BytesIO(image_data))
+        # open the image using PIL
+        drawing = Image.open(io.BytesIO(image_data))
 
-    # save the image as a PNG file
-    drawing.save("output.png", "PNG")
+        # save the image as a PNG file
+        drawing.save("output.png", "PNG")
 
-    # load and initialise output png
-    img = cv2.imread('output.png')
-    img = cv2.resize(img, (imgl2*2,imgl2*2))
+        # load and initialise output png
+        img = cv2.imread('output.png')
+        img = cv2.resize(img, (imgl2*2,imgl2*2))
 
-    w = frame.shape[1]
-    h = frame.shape[0]
+        w = frame.shape[1]
+        h = frame.shape[0]
 
-    #blank frame to place image on
-    frameImg = np.zeros([h, w, 3], dtype=np.uint8)
-                        
-    if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
-        frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
-        frameImg[cY-imgl2:cY+imgl2, cX-imgl2:cX+imgl2] = img
-        # cv2.imshow('image frame', frameImg)
+        #blank frame to place image on
+        frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+        blankFrame = frameImg
 
-    # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
-    frame += frameImg
+        try:
+                            
+            if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
+                frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
+                frameImg[cY-imgl2:cY+imgl2, cX-imgl2:cX+imgl2] = img
+            # cv2.imshow('image frame', frameImg)
 
-# display react prompt
-def stage6(frame):
-    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
-                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
-    cv2.putText(frame, "React to the other user's drawing!", (50,100),
-                cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
-    cv2.putText(frame, "Feel free to use gestures, facial expressions, or emojis.", (50,130),
-                cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
+        except: 
+            frameImg = blankFrame
+
+        # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
+        frame += frameImg
+    else:
+        w = frame.shape[1]
+        h = frame.shape[0]
+
+        if corners> 0:
+            cv2.putText(frame, nickname, (cX-80, cY-20), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+            cv2.putText(frame, 'is drawing...', (cX-100, cY+10), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+
+    #2. If drawingOther exists, display on bubble. Else, display 'nickname' is drawing message
+    # tagged to cX other, cY other
+
+    if drawingOther:
     
+        # decode the base64 string
+        # file = open('fyp test codes/file1.txt') #drawing)
+        # base64_string = file.read()
+        # file.close()
+
+        base64_string = drawingOther
+
+        #pad the string with '=' to make the length a multiple of 4
+        while len(base64_string) % 4 != 0:
+            base64_string += "="
+
+        # Remove the "data:image/png;base64," prefix from the string
+        base64_string = base64_string.replace("data:image/png;base64,", "")
+
+        image_data = base64.b64decode(base64_string)
+
+        # open the image using PIL
+        drawing = Image.open(io.BytesIO(image_data))
+
+        # save the image as a PNG file
+        drawing.save("output.png", "PNG")
+
+        # load and initialise output png
+        img = cv2.imread('output.png')
+        img = cv2.resize(img, (imgl2*2,imgl2*2))
+
+        w = frame.shape[1]
+        h = frame.shape[0]
+
+        #blank frame to place image on
+        frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+        blankFrame = frameImg
+
+        try:
+                            
+            if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
+                frame = cv2.circle(frame, (cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
+                frameImg[cYOther-imgl2:cYOther+imgl2, cXOther-imgl2:cXOther+imgl2] = img
+            # cv2.imshow('image frame', frameImg)
+
+        except: 
+            frameImg = blankFrame
+
+        # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
+        frame += frameImg
+    
+    else:
+        w = frame.shape[1]
+        h = frame.shape[0]
+
+        if corners> 0:
+            cv2.putText(frame, nicknameOther, (cX-80, cY-20), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+            cv2.putText(frame, 'is drawing...', (cX-100, cY+10), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+
+    
+# no emoji                                      // state = 4, stateOther = 4
+# user showing emoji, userOther not             // state = 5, stateOther = 4
+# user not showing emoji, userOther is          // state = 4, stateOther = 5
+# both showing emoji                            // state, stateOther = 5
 
 # display emojis
-def stage7(frame):
+def stage4(frame, emoji, emojiOther):
 
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
@@ -202,82 +289,113 @@ def stage7(frame):
                 cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
     cv2.putText(frame, "Feel free to use gestures, facial expressions, or emojis.", (50,130),
                 cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
-    
-    # Load the font file
-    font_file = 'fyp test codes\seguiemj.ttf'
-    font_size = 150
-    font = ImageFont.truetype(font_file, font_size)
 
-    # Create a new RGBA image with a transparent background
-    width, height = 200, 200
-    image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    #1. If emoji exists, display emoji on offset center of screen(else, do nothing)
+    if emoji is True:
+        # Load the font file
+        font_file = 'fyp test codes\seguiemj.ttf'
+        font_size = 150
+        font = ImageFont.truetype(font_file, font_size)
 
-    #Retrieve emoji text from backend
-    text = '💩'
+        # Create a new RGBA image with a transparent background
+        width, height = 200, 200
+        image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
-    # Get the bounding box of the text
-    bbox = font.getbbox(text)
+        #Retrieve emoji text from backend
+        text = emoji #text = drawing / drawingOther
 
-    # Create a new image with dimensions based on the bounding box
-    image = Image.new("RGBA", (bbox[2] - bbox[0], bbox[3] - bbox[1]), (255, 255, 255, 0))
+        # Get the bounding box of the text
+        bbox = font.getbbox(text)
 
-    # Draw the text on the image
-    draw = ImageDraw.Draw(image)
-    draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
+        # Create a new image with dimensions based on the bounding box
+        image = Image.new("RGBA", (bbox[2] - bbox[0], bbox[3] - bbox[1]), (255, 255, 255, 0))
 
-    # Save the image to disk
-    image.save('colored_emoji.png')
+        # Draw the text on the image
+        draw = ImageDraw.Draw(image)
+        draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
 
-    #load and initialise emoji image in openCV
-    emj = cv2.imread('colored_emoji.png')
+        # Save the image to disk
+        image.save('colored_emoji.png')
 
-    # x1, y1 = bbox[0], bbox[1]
-    # x2, y2 = bbox[2], bbox[1]
-    # x3, y3 = bbox[2], bbox[3]
-    # x4, y4 = bbox[0], bbox[3]
-    # cv2.circle(emj, (x1,y1), 5, (255,0,0), -1 )
-    # cv2.circle(emj, (x2,y2), 5, (0,255,0), -1 )
-    # cv2.circle(emj, (x3,y3), 5, (0,255,255), -1 )
-    # cv2.circle(emj, (x4,y4), 5, (255,0,255), -1 )
+        #load and initialise emoji image in openCV
+        emj = cv2.imread('colored_emoji.png')
 
-    # cv2.imshow('emoji bbox', emj)
+        emoji_w = int(bbox[2] - bbox[0])
+        emoji_h = int(bbox[3] - bbox[1])
 
-    emoji_w = int(bbox[2] - bbox[0])
-    emoji_h = int(bbox[3] - bbox[1])
+        w = frame.shape[1]
+        h = frame.shape[0]
+
+        # blank frame to place image on
+        frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+
+        # get coordinates for center of frame
+        centerX = int(frameImg.shape[1]/2)
+        centerY = int(frameImg.shape[0]/2)
+
+        #draw a circle under the emoji area
+        cv2.circle(frame, (centerX, centerY), int(emoji_w/2)-18, (0, 0,0), -1)
+
+        # #display emoji in the center of window
+        frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
+
+        frame += frameImg
 
 
-    w = frame.shape[1]
-    h = frame.shape[0]
+    #2. If emojiOther exists, display other emoji on offset center of screen (mirrored)
+    if emojiOther is True:
+        # Load the font file
+        font_file = 'fyp test codes\seguiemj.ttf'
+        font_size = 150
+        font = ImageFont.truetype(font_file, font_size)
 
-    #convert video feed to rgba
-    # height, width, channels = frame.shape
-    # rgba_frame = np.zeros((height, width, 4), dtype=np.uint8)
-    # rgba_frame[:,:,0:3] = frame
+        # Create a new RGBA image with a transparent background
+        width, height = 200, 200
+        image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
-    # blank frame to place image on
-    frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+        #Retrieve emoji text from backend
+        text = emoji #text = drawing / drawingOther
 
-    # #initialise a blank rgba frame
-    # channels = 4  # RGBA
-    # frameImg = np.zeros((h, w, channels), dtype=np.uint8)
-    # frameImg[:,:,3] = 0
+        # Get the bounding box of the text
+        bbox = font.getbbox(text)
 
-    # get coordinates for center of frame
-    centerX = int(frameImg.shape[1]/2)
-    centerY = int(frameImg.shape[0]/2)
+        # Create a new image with dimensions based on the bounding box
+        image = Image.new("RGBA", (bbox[2] - bbox[0], bbox[3] - bbox[1]), (255, 255, 255, 0))
 
-    #draw a circle under the emoji area
-    cv2.circle(frame, (centerX, centerY), int(emoji_w/2)-18, (0, 0,0), -1)
+        # Draw the text on the image
+        draw = ImageDraw.Draw(image)
+        draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
 
-    # #display emoji in the center of window
-    frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
+        # Save the image to disk
+        image.save('colored_emoji.png')
 
-    frame += frameImg
-    # frame = cv2.addWeighted(rgba_frame, 1.0, frameImg, 0.5, 0)
+        #load and initialise emoji image in openCV
+        emj = cv2.imread('colored_emoji.png')
+
+        emoji_w = int(bbox[2] - bbox[0])
+        emoji_h = int(bbox[3] - bbox[1])
+
+        w = frame.shape[1]
+        h = frame.shape[0]
+
+        # blank frame to place image on
+        frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+
+        # get coordinates for center of frame
+        centerX = int(frameImg.shape[1]/2)
+        centerY = int(frameImg.shape[0]/2)
+
+        #draw a circle under the emoji area
+        cv2.circle(frame, (centerX, centerY), int(emoji_w/2)-18, (0, 0,0), -1)
+
+        # #display emoji in the center of window
+        frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
+
+        frame += frameImg
 
 
 # display thank you message
-def stage8(frame):
+def stage5(frame):
     cv2.putText(frame, 'Thank you for playing!', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     cv2.putText(frame, 'Check out the archive wall outside.', (50,100),
@@ -411,7 +529,6 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         # faces = face_cascade.detectMultiScale(gray, 1.1, 4)
 
         #verify at least one aruco marker was detected
-        cX, cY = 0,0
         imgl2=1
 
         if len(corners) > 0:
@@ -491,10 +608,10 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
 
                     # cX and cY would need to be global variables with shared memory
                     # center (x,y) coordinates of the aruco marker 
-                    cX = int((topLeft[0] + bottomRight[0]) / 2.0)
-                    cY = int((topLeft[1] + bottomRight[1]) / 2.0)
+                    cX.value = int((topLeft[0] + bottomRight[0]) / 2.0)
+                    cY.value = int((topLeft[1] + bottomRight[1]) / 2.0)
 
-                    frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) #display a white circle on aruco marker by default
+                    frame = cv2.circle(frame, (cX.value,cY.value-3), int(imgl2-2), (255, 255, 255), -1) #display a white circle on aruco marker by default
                 
                 #draw the aruco marker ID on the frame
                 # cv2.putText(frame, "Hello World",
@@ -522,22 +639,19 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
                     # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
                     # frame += frameImg
         
-        if stage.value ==1:
-            stage1(frame)
+        stage.value = getStage(state.value, stateOther.value)
+
+        if stage.value == 1:
+            stage1(frame, urlId.value.decode('utf-8'))
         elif stage.value == 2:
             stage2(frame)
         elif stage.value ==3:
-            stage3(frame)
-        elif stage.value==4:
-            stage4(frame)   
-        elif stage.value ==5:
-            stage5(frame, cX, cY, imgl2)
-        elif stage.value ==6:
-            stage6(frame)
-        elif stage.value ==7:
-            stage7(frame)
-        elif stage.value==8:
-            stage8(frame)
+            stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing, drawingOther, nickname, nicknameOther,
+                    cXOther, cYOther)
+        elif stage.value == 4:
+            stage4(frame, emoji, emojiOther)
+        elif stage.value == 5:
+            stage5(frame)
 
         #show the output frame
         cv2.imshow("Say Hello", frame)
@@ -549,10 +663,9 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
             break
 
     #cleanup
+    cap.release()
     cv2.destroyAllWindows()
-    cap.stop()
-
-    
+       
 
 if __name__=='__main__':
     
