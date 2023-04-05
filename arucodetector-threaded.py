@@ -12,6 +12,7 @@ import base64
 import io
 from PIL import Image, ImageDraw, ImageFont
 import requests 
+import qrcode as QR
 
 import pytz
 import config
@@ -41,15 +42,15 @@ def talker_thread(stage):
     #     i += 1
     #     stage.value = i
 
-#display qr code for people to scan
-def stage0(frame):
-    pass
-
-
-#start frame 1 - welcome message     // stage = 0, 1, 2
+#start frame 1 - welcome message and display QR code    // state = 0, 1, 2
 def stage1(frame):
     cv2.putText(frame, 'Welcome! Press start on device to begin.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+    
+    # URL = 'https://www.linkedin.com/in/satyaganesh6055/' #Add your URL
+    # code = QR.make(URL)
+    # code.save('QR.png')
+    # code.show()
 
 #start frame 2 - waiting for other user   // stage = 3, stage > stateOther
 def stage2(frame):
@@ -139,7 +140,7 @@ def stage7(frame):
     image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
     #Retrieve emoji text from backend
-    text = '😀'
+    text = '💩'
 
     # Get the bounding box of the text
     bbox = font.getbbox(text)
@@ -155,7 +156,7 @@ def stage7(frame):
     image.save('colored_emoji.png')
 
     #load and initialise emoji image in openCV
-    emj = cv2.imread('colored_emoji.png', cv2.IMREAD_UNCHANGED).astype('uint8')
+    emj = cv2.imread('colored_emoji.png')
 
     # x1, y1 = bbox[0], bbox[1]
     # x2, y2 = bbox[2], bbox[1]
@@ -168,33 +169,38 @@ def stage7(frame):
 
     # cv2.imshow('emoji bbox', emj)
 
-    emoji_w = bbox[2] - bbox[0]
-    emoji_h = bbox[3] - bbox[1]
+    emoji_w = int(bbox[2] - bbox[0])
+    emoji_h = int(bbox[3] - bbox[1])
 
 
     w = frame.shape[1]
     h = frame.shape[0]
 
     #convert video feed to rgba
-    height, width, channels = frame.shape
-    rgba_frame = np.zeros((height, width, 4), dtype=np.uint8)
-    rgba_frame[:,:,0:3] = frame
+    # height, width, channels = frame.shape
+    # rgba_frame = np.zeros((height, width, 4), dtype=np.uint8)
+    # rgba_frame[:,:,0:3] = frame
 
-    #blank frame to place image on
-    # frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+    # blank frame to place image on
+    frameImg = np.zeros([h, w, 3], dtype=np.uint8)
 
-    #initialise a blank rgba frame
-    channels = 4  # RGBA
-    frameImg = np.zeros((h, w, channels), dtype=np.uint8)
-    frameImg[:,:,3] = 0
+    # #initialise a blank rgba frame
+    # channels = 4  # RGBA
+    # frameImg = np.zeros((h, w, channels), dtype=np.uint8)
+    # frameImg[:,:,3] = 0
 
-    #display emoji on top left corner of window
-    frameImg[0:emoji_h, 0:emoji_w] = emj
-    # cv2.imshow('emoji frame', frameImg)
+    # get coordinates for center of frame
+    centerX = int(frameImg.shape[1]/2)
+    centerY = int(frameImg.shape[0]/2)
 
-    # rgba_frame += frameImg
-    frame = cv2.addWeighted(rgba_frame, 1.0, frameImg, 0.5, 0)
-    cv2.imshow('emoji overlay',frame)
+    #draw a circle under the emoji area
+    cv2.circle(frame, (centerX, centerY), int(emoji_w/2)-18, (0, 0,0), -1)
+
+    # #display emoji in the center of window
+    frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
+
+    frame += frameImg
+    # frame = cv2.addWeighted(rgba_frame, 1.0, frameImg, 0.5, 0)
 
 
 # display thank you message
