@@ -250,7 +250,8 @@ def stage8(frame):
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
 #loop that is running the aruco program
-def aruco_thread(stage):
+def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY):
     #construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-t", "--type", type=str,
@@ -521,7 +522,8 @@ def aruco_thread(stage):
 
 if __name__=='__main__':
     
-    arucoThread = Process(target=aruco_thread, args=(stage,))
+    arucoThread = Process(target=aruco_thread, args=(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY))
     talkerThread = Process(target=talker_thread, args=(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
                   descriptionOther, emoji, emojiOther, cXOther, cYOther))
     senderThread = Process(target=sender_thread, args=(state, urlId, cX, cY))
