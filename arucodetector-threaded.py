@@ -1,5 +1,5 @@
 from datetime import datetime
-from multiprocessing import Pool, Value, Process
+from multiprocessing import Pool, Value, Process, Array
 import cv2
 import numpy as np
 from imutils.video import VideoStream
@@ -18,28 +18,73 @@ import config
 from dateutil.relativedelta import relativedelta
 import keyboard
 
+state = Value('i', 1)
+stateOther = Value('i', 1)
+nickname = Array('c', b'')
+nicknameOther = Array('c', b'')
+drawing = Array('c', b'')
+drawingOther = Array('c', b'')
+description = Array('c', b'')
+descriptionOther = Array('c', b'')
+emoji = Array('c', b'')
+emojiOther = Array('c', b'')
+
+urlId = Array('c', b'')
+cX = Value('i', 0)
+cY = Value('i', 0)
+cXOther = Value('i', 0)
+cYOther = Value('i', 0)
 stage = Value('i', 1)
 
 # state1, state2, drawing1, drawing2, emoji1, emoji2, all provided at the same time, but some may be null values if not updated by user yet.
 
 #retrieve data from the app and set the states accordingly in openCV
 
-def talker_thread(stage):
-    url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
-    # print(url_id) 
+def sender_thread(stage, urlId, cX, cY):
+    while True:
+        url = 'https://borderless-backend.herokuapp.com/openCVData'
+        data = {'id': urlId.value.decode('utf-8'), 'cX': cX.value, 'cY': cY.value}
 
-    url = 'https://borderless-backend.herokuapp.com/openCVData?id='
-    url += url_id['id']
-    # print(url)
+        response = requests.post(url, json = data)
 
-    data = requests.get(url).json()
-    print(data)
-    
-    # i = 0
-    # while i < 5:
-    #     time.sleep(5)
-    #     i += 1
-    #     stage.value = i
+        time.sleep(0.5)
+
+
+def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther):
+    while True:
+        url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
+        # print(url_id)
+        urlId.value = url_id['id'].encode('utf-8')
+
+        url = 'https://borderless-backend.herokuapp.com/openCVData?id='
+        url += urlId.value.decode('utf-8')
+        # print(url)
+
+        first = True
+
+        while True:
+            data = requests.get(url).json()
+            state.value = data['state']
+            stateOther.value = data['stateOther']
+            nickname.value = data['nickname'].encode('utf-8')
+            nicknameOther.value = data['nicknameOther'].encode('utf-8')
+            drawing.value = data['drawing'].encode('utf-8')
+            drawingOther.value = data['drawingOther'].encode('utf-8')
+            description.value = data['description'].encode('utf-8')
+            descriptionOther.value = data['descriptionOther'].encode('utf-8')
+            emoji.value = data['emoji'].encode('utf-8')
+            emojiOther.value = data['emojiOther'].encode('utf-8')
+            cXOther.value = data['cXOther']
+            cYOther.value = data['cYOther']
+
+            if not first and state.value == 0 and stateOther.value == 0:
+                break
+
+            first = False
+
+            time.sleep(1)
+
 
 #display qr code for people to scan
 def stage0(frame):
@@ -476,13 +521,17 @@ def aruco_thread(stage):
 
 if __name__=='__main__':
     
-    x = Process(target=aruco_thread, args=(stage,))
-    y = Process(target=talker_thread, args=(stage,))
+    arucoThread = Process(target=aruco_thread, args=(stage,))
+    talkerThread = Process(target=talker_thread, args=(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther))
+    senderThread = Process(target=sender_thread, args=(state, urlId, cX, cY))
 
-    x.start()
-    y.start()
+    arucoThread.start()
+    talkerThread.start()
+    senderThread.start()
     # pool.close()
     # pool.join()
-    x.join()
-    y.join()
+    arucoThread.join()
+    talkerThread.join()
+    senderThread.join()
     print('end')
