@@ -218,12 +218,14 @@ def stage3(frame, cX, cY, imgl2, corners,
         h = frame.shape[0]
 
         if corners> 0:
-            cv2.putText(frame, nickname, (cX-80, cY-20), 
-                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
-            cv2.putText(frame, 'is drawing...', (cX-100, cY+10), 
-                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+            if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
+                frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
+                cv2.putText(frame, nickname, (cX-80, cY-20), 
+                            cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+                cv2.putText(frame, 'is drawing...', (cX-100, cY+10), 
+                            cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
 
-    #2. If drawingOther exists, display on bubble. Else, display 'nickname' is drawing message
+    #2. If drawingOther exists, display on other bubble. Else, display 'nickname' is drawing message
     # tagged to cX other, cY other
 
     if drawingOther != '':
@@ -248,11 +250,21 @@ def stage3(frame, cX, cY, imgl2, corners,
         drawing = Image.open(io.BytesIO(image_data))
 
         # save the image as a PNG file
-        drawing.save("output.png", "PNG")
+        drawing.save("outputother.png", "PNG")
 
         # load and initialise output png
-        img = cv2.imread('output.png')
+        img = cv2.imread('outputother.png', cv2.IMREAD_UNCHANGED)
+
+        for row in img:
+            for pixel in row:
+                if pixel[3] !=0:
+                    pixel[0] = 128
+                    pixel[1] = 128
+                    pixel[2] = 128
+
+
         img = cv2.resize(img, (imgl2*2,imgl2*2))
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 
         w = frame.shape[1]
         h = frame.shape[0]
@@ -279,10 +291,12 @@ def stage3(frame, cX, cY, imgl2, corners,
         h = frame.shape[0]
 
         if corners> 0:
-            cv2.putText(frame, nicknameOther, (cXOther-80, cYOther-20), 
-                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
-            cv2.putText(frame, 'is drawing...', (cXOther-100, cYOther+10), 
-                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+            if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
+                cv2.circle(frame, (cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
+                cv2.putText(frame, nicknameOther, (cXOther-80, cYOther-20), 
+                            cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+                cv2.putText(frame, 'is drawing...', (cXOther-100, cYOther+10), 
+                            cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
 
     
 # no emoji                                      // state = 4, stateOther = 4
