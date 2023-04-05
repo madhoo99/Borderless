@@ -70,6 +70,8 @@ def stage3(frame):
 
 #drawing - user is drawing message         
 def stage4(frame):
+    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     pass
 
 #drawing - display of drawings on ar markers
@@ -130,6 +132,14 @@ def stage6(frame):
 
 # display emojis
 def stage7(frame):
+
+    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+    cv2.putText(frame, "React to the other user's drawing!", (50,100),
+                cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
+    cv2.putText(frame, "Feel free to use gestures, facial expressions, or emojis.", (50,130),
+                cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
+    
     # Load the font file
     font_file = 'fyp test codes\seguiemj.ttf'
     font_size = 150
