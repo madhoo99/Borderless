@@ -46,22 +46,27 @@ def state0(frame):
     pass
 
 
-#start frame 1 - welcome message
+#start frame 1 - welcome message     // state = 0, 1, 2
 def state1(frame):
     cv2.putText(frame, 'Welcome! Press start on device to begin.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
-#start frame 2 - waiting for other user
+#start frame 2 - waiting for other user   // state = 3, state > stateOther
 def state2(frame):
     cv2.putText(frame, 'Waiting for other player...', (50,100),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
-#prompt
+#prompt                                   // state = 3
+
+# both drawing                                      // state = 4, stateOther = 4
+# user finished, userOther has not                  // state = 5, stateOther = 4
+# user has not finished, userOther has finished     // state = 4, stateOther = 5
+# both finished                                     // state, stateOther = 5
 def state3(frame):
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
-#drawing - user is drawing message
+#drawing - user is drawing message         
 def state4(frame):
     pass
 
@@ -360,6 +365,7 @@ def aruco_thread(state):
                     
                     aruco_corners = np.array([topLeft1, topRight1, bottomRight1, bottomLeft1])
 
+                    # cX and cY would need to be global variables with shared memory
                     # center (x,y) coordinates of the aruco marker 
                     cX = int((topLeft[0] + bottomRight[0]) / 2.0)
                     cY = int((topLeft[1] + bottomRight[1]) / 2.0)
