@@ -218,12 +218,15 @@ def stage3(frame, cX, cY, imgl2, corners,
         h = frame.shape[0]
 
         if corners> 0:
-            if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
-                frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
-                cv2.putText(frame, nickname, (cX-80, cY-20), 
-                            cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
-                cv2.putText(frame, 'is drawing...', (cX-100, cY+10), 
-                            cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+            try:
+                if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
+                    frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
+                    cv2.putText(frame, nickname, (cX-80, cY-20), 
+                                cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+                    cv2.putText(frame, 'is drawing...', (cX-100, cY+10), 
+                                cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+            except:
+                pass
 
     #2. If drawingOther exists, display on other bubble. Else, display 'nickname' is drawing message
     # tagged to cX other, cY other
