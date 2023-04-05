@@ -289,14 +289,16 @@ def stage3(frame, cX, cY, imgl2, corners,
     else:
         w = frame.shape[1]
         h = frame.shape[0]
-
-        if corners> 0:
+        try:
             if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
                 cv2.circle(frame, (cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
                 cv2.putText(frame, nicknameOther, (cXOther-80, cYOther-20), 
                             cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
                 cv2.putText(frame, 'is drawing...', (cXOther-100, cYOther+10), 
                             cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+        except:
+            pass
+
 
     
 # no emoji                                      // state = 4, stateOther = 4
@@ -306,7 +308,6 @@ def stage3(frame, cX, cY, imgl2, corners,
 
 # display emojis
 def stage4(frame, emoji, emojiOther):
-    print('I am in stage 4.')
 
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
