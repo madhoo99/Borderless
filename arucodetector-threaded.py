@@ -18,13 +18,13 @@ import config
 from dateutil.relativedelta import relativedelta
 import keyboard
 
-state = Value('i', 1)
+stage = Value('i', 1)
 
 # state1, state2, drawing1, drawing2, emoji1, emoji2, all provided at the same time, but some may be null values if not updated by user yet.
 
 #retrieve data from the app and set the states accordingly in openCV
 
-def talker_thread(state):
+def talker_thread(stage):
     url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
     # print(url_id) 
 
@@ -39,25 +39,25 @@ def talker_thread(state):
     # while i < 5:
     #     time.sleep(5)
     #     i += 1
-    #     state.value = i
+    #     stage.value = i
 
 #display qr code for people to scan
-def state0(frame):
+def stage0(frame):
     pass
 
 
-#start frame 1 - welcome message     // state = 0, 1, 2
-def state1(frame):
+#start frame 1 - welcome message     // stage = 0, 1, 2
+def stage1(frame):
     cv2.putText(frame, 'Welcome! Press start on device to begin.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
-#start frame 2 - waiting for other user   // state = 3, state > stateOther
-def state2(frame):
+#start frame 2 - waiting for other user   // stage = 3, stage > stateOther
+def stage2(frame):
     cv2.putText(frame, 'Waiting for other player...', (50,100),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
-#prompt                                   // state = 3
-def state3(frame):
+#prompt                                   // stage = 3
+def stage3(frame):
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
@@ -68,11 +68,11 @@ def state3(frame):
 
 
 #drawing - user is drawing message         
-def state4(frame):
+def stage4(frame):
     pass
 
 #drawing - display of drawings on ar markers
-def state5(frame, cX, cY, imgl2):
+def stage5(frame, cX, cY, imgl2):
     
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
@@ -118,7 +118,7 @@ def state5(frame, cX, cY, imgl2):
     frame += frameImg
 
 # display react prompt
-def state6(frame):
+def stage6(frame):
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     cv2.putText(frame, "React to the other user's drawing!", (50,100),
@@ -128,7 +128,7 @@ def state6(frame):
     
 
 # display emojis
-def state7(frame):
+def stage7(frame):
     # Load the font file
     font_file = 'fyp test codes\seguiemj.ttf'
     font_size = 150
@@ -155,17 +155,16 @@ def state7(frame):
     image.save('colored_emoji.png')
 
     #load and initialise emoji image in openCV
-    emj = cv2.imread('colored_emoji.png')
-    # cv2.imshow('emoji', emj)
+    emj = cv2.imread('colored_emoji.png', cv2.IMREAD_UNCHANGED).astype('uint8')
 
-    x1, y1 = bbox[0], bbox[1]
-    x2, y2 = bbox[2], bbox[1]
-    x3, y3 = bbox[2], bbox[3]
-    x4, y4 = bbox[0], bbox[3]
-    cv2.circle(emj, (x1,y1), 5, (255,0,0), -1 )
-    cv2.circle(emj, (x2,y2), 5, (0,255,0), -1 )
-    cv2.circle(emj, (x3,y3), 5, (0,255,255), -1 )
-    cv2.circle(emj, (x4,y4), 5, (255,0,255), -1 )
+    # x1, y1 = bbox[0], bbox[1]
+    # x2, y2 = bbox[2], bbox[1]
+    # x3, y3 = bbox[2], bbox[3]
+    # x4, y4 = bbox[0], bbox[3]
+    # cv2.circle(emj, (x1,y1), 5, (255,0,0), -1 )
+    # cv2.circle(emj, (x2,y2), 5, (0,255,0), -1 )
+    # cv2.circle(emj, (x3,y3), 5, (0,255,255), -1 )
+    # cv2.circle(emj, (x4,y4), 5, (255,0,255), -1 )
 
     # cv2.imshow('emoji bbox', emj)
 
@@ -176,23 +175,37 @@ def state7(frame):
     w = frame.shape[1]
     h = frame.shape[0]
 
+    #convert video feed to rgba
+    height, width, channels = frame.shape
+    rgba_frame = np.zeros((height, width, 4), dtype=np.uint8)
+    rgba_frame[:,:,0:3] = frame
+
     #blank frame to place image on
-    frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+    # frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+
+    #initialise a blank rgba frame
+    channels = 4  # RGBA
+    frameImg = np.zeros((h, w, channels), dtype=np.uint8)
+    frameImg[:,:,3] = 0
+
+    #display emoji on top left corner of window
     frameImg[0:emoji_h, 0:emoji_w] = emj
+    # cv2.imshow('emoji frame', frameImg)
 
-
-    frame += frameImg
+    # rgba_frame += frameImg
+    frame = cv2.addWeighted(rgba_frame, 1.0, frameImg, 0.5, 0)
+    cv2.imshow('emoji overlay',frame)
 
 
 # display thank you message
-def state8(frame):
+def stage8(frame):
     cv2.putText(frame, 'Thank you for playing!', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     cv2.putText(frame, 'Check out the archive wall outside.', (50,100),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
 #loop that is running the aruco program
-def aruco_thread(state):
+def aruco_thread(stage):
     #construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-t", "--type", type=str,
@@ -278,7 +291,7 @@ def aruco_thread(state):
             # scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
             # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
             # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
-            state.value = int(input('Enter state value: ') or str(state.value))
+            stage.value = int(input('Enter stage value: ') or str(stage.value))
             # duration = int(input('Enter duration: ') or str(duration))
             
             # start_time = datetime.now(pytz.utc)
@@ -300,7 +313,7 @@ def aruco_thread(state):
         frame = cv2.resize(frame, (int(w * scale), int(h * scale)))
 
         #print(frame.shape[1])
-        # print(state.value)
+        # print(stage.value)
 
         # success with asus webcam
         # frame = frame[200:, :(frame.shape[1] - 1150)]
@@ -429,22 +442,22 @@ def aruco_thread(state):
                     # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
                     # frame += frameImg
         
-        if state.value ==1:
-            state1(frame)
-        elif state.value == 2:
-            state2(frame)
-        elif state.value ==3:
-            state3(frame)
-        elif state.value==4:
-            state4(frame)   
-        elif state.value ==5:
-            state5(frame, cX, cY, imgl2)
-        elif state.value ==6:
-            state6(frame)
-        elif state.value ==7:
-            state7(frame)
-        elif state.value==8:
-            state8(frame)
+        if stage.value ==1:
+            stage1(frame)
+        elif stage.value == 2:
+            stage2(frame)
+        elif stage.value ==3:
+            stage3(frame)
+        elif stage.value==4:
+            stage4(frame)   
+        elif stage.value ==5:
+            stage5(frame, cX, cY, imgl2)
+        elif stage.value ==6:
+            stage6(frame)
+        elif stage.value ==7:
+            stage7(frame)
+        elif stage.value==8:
+            stage8(frame)
 
         #show the output frame
         cv2.imshow("Say Hello", frame)
@@ -463,8 +476,8 @@ def aruco_thread(state):
 
 if __name__=='__main__':
     
-    x = Process(target=aruco_thread, args=(state,))
-    y = Process(target=talker_thread, args=(state,))
+    x = Process(target=aruco_thread, args=(stage,))
+    y = Process(target=talker_thread, args=(stage,))
 
     x.start()
     y.start()
