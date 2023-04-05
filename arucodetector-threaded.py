@@ -85,6 +85,24 @@ def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, draw
 
             time.sleep(1)
 
+def getStage(state, stateOther):
+    if state in [0, 1, 2]:
+        return 1
+    if state == 3 and state > stateOther:
+        return 2
+    if state == 3:
+        return 3
+    
+    if state == 4 and stateOther == 4:
+        return 4
+    if state == 5 and stateOther == 4:
+        return 5
+    if state == 4 and stateOther == 5:
+        return 6
+    if state == 5 and stateOther == 5:
+        return 7
+    
+    return 8
 
 #display qr code for people to scan
 def stage0(frame):
