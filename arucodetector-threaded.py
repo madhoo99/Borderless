@@ -57,14 +57,15 @@ def state2(frame):
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
 #prompt                                   // state = 3
+def state3(frame):
+    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
 # both drawing                                      // state = 4, stateOther = 4
 # user finished, userOther has not                  // state = 5, stateOther = 4
 # user has not finished, userOther has finished     // state = 4, stateOther = 5
 # both finished                                     // state, stateOther = 5
-def state3(frame):
-    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
-                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+
 
 #drawing - user is drawing message         
 def state4(frame):
@@ -72,6 +73,10 @@ def state4(frame):
 
 #drawing - display of drawings on ar markers
 def state5(frame, cX, cY, imgl2):
+    
+    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+    
     #1. convert retrieved drawings' dataURLs to image file
     
     # decode the base64 string
@@ -96,7 +101,6 @@ def state5(frame, cX, cY, imgl2):
 
     # load and initialise output png
     img = cv2.imread('output.png')
-    cv2.imshow('image', img)
     img = cv2.resize(img, (imgl2*2,imgl2*2))
 
     w = frame.shape[1]
@@ -106,10 +110,11 @@ def state5(frame, cX, cY, imgl2):
     frameImg = np.zeros([h, w, 3], dtype=np.uint8)
                         
     if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
-        # frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
+        frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
         frameImg[cY-imgl2:cY+imgl2, cX-imgl2:cX+imgl2] = img
+        # cv2.imshow('image frame', frameImg)
 
-    frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
+    # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
     frame += frameImg
 
 # display react prompt
@@ -134,7 +139,7 @@ def state7(frame):
     image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
     #Retrieve emoji text from backend
-    text = '😀❤☃'
+    text = '😀'
 
     # Get the bounding box of the text
     bbox = font.getbbox(text)
@@ -150,7 +155,33 @@ def state7(frame):
     image.save('colored_emoji.png')
 
     #load and initialise emoji image in openCV
-    cv2.imread('colored_emoji.png')
+    emj = cv2.imread('colored_emoji.png')
+    # cv2.imshow('emoji', emj)
+
+    x1, y1 = bbox[0], bbox[1]
+    x2, y2 = bbox[2], bbox[1]
+    x3, y3 = bbox[2], bbox[3]
+    x4, y4 = bbox[0], bbox[3]
+    cv2.circle(emj, (x1,y1), 5, (255,0,0), -1 )
+    cv2.circle(emj, (x2,y2), 5, (0,255,0), -1 )
+    cv2.circle(emj, (x3,y3), 5, (0,255,255), -1 )
+    cv2.circle(emj, (x4,y4), 5, (255,0,255), -1 )
+
+    # cv2.imshow('emoji bbox', emj)
+
+    emoji_w = bbox[2] - bbox[0]
+    emoji_h = bbox[3] - bbox[1]
+
+
+    w = frame.shape[1]
+    h = frame.shape[0]
+
+    #blank frame to place image on
+    frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+    frameImg[0:emoji_h, 0:emoji_w] = emj
+
+
+    frame += frameImg
 
 
 # display thank you message
