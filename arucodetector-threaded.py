@@ -91,9 +91,9 @@ def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, draw
 def getStage(state, stateOther):
     if state in [0, 1, 2]: # welcome message, nickname, drawing prompt
         return 1
-    if state == 3 and state > stateOther: # 
+    if state == 3 and state > stateOther:  
         return 2
-    if (state == 3 or state == 4) and (state != 5 and stateOther != 5):
+    if (state == 3 or state == 4) or (state == 5 and stateOther != 5):
         return 3
     if state == 5 and stateOther == 5:
         return 4
@@ -104,12 +104,14 @@ def getStage(state, stateOther):
 
 #start frame 1 - welcome message and display QR code    // state = 0, 1, 2
 def stage1(frame, urlId):
+    # print('I am in stage 1.')
+
     cv2.putText(frame, 'Welcome! Press start on device to begin.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
     URL = 'https://borderless-frontend-new.herokuapp.com/home?id=' #Add your URL
     URL += urlId
-    print(URL)
+    # print(URL)
 
     code = QR.make(URL)
     code.save('QR.png')
@@ -138,6 +140,7 @@ def stage1(frame, urlId):
 
 #start frame 2 - waiting for other user   // stage = 3, stage > stateOther
 def stage2(frame):
+    # print('I am in stage 2.')
     cv2.putText(frame, 'Waiting for other player...', (50,100),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
@@ -151,18 +154,15 @@ def stage3(frame, cX, cY, imgl2, corners,
            drawing, drawingOther, nickname, nicknameOther,
            cXOther, cYOther):
 
+    # print('I am in stage 3.')
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
     #1. If drawing exists, convert retrieved drawings' dataURLs to image file, else display 'nickname is drawing' message
     # tagged to cX, cY
 
-    if drawing:
-    
+    if drawing != '':
         # decode the base64 string
-        # file = open('fyp test codes/file1.txt') #drawing)
-        # base64_string = file.read()
-        # file.close()
         base64_string = drawing
 
         #pad the string with '=' to make the length a multiple of 4
@@ -181,8 +181,18 @@ def stage3(frame, cX, cY, imgl2, corners,
         drawing.save("output.png", "PNG")
 
         # load and initialise output png
-        img = cv2.imread('output.png')
+        img = cv2.imread('output.png', cv2.IMREAD_UNCHANGED)
+
+        for row in img:
+            for pixel in row:
+                if pixel[3] !=0:
+                    pixel[0] = 128
+                    pixel[1] = 128
+                    pixel[2] = 128
+
+
         img = cv2.resize(img, (imgl2*2,imgl2*2))
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 
         w = frame.shape[1]
         h = frame.shape[0]
@@ -191,8 +201,7 @@ def stage3(frame, cX, cY, imgl2, corners,
         frameImg = np.zeros([h, w, 3], dtype=np.uint8)
         blankFrame = frameImg
 
-        try:
-                            
+        try:                      
             if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
                 frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
                 frameImg[cY-imgl2:cY+imgl2, cX-imgl2:cX+imgl2] = img
@@ -204,6 +213,7 @@ def stage3(frame, cX, cY, imgl2, corners,
         # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
         frame += frameImg
     else:
+
         w = frame.shape[1]
         h = frame.shape[0]
 
@@ -216,7 +226,7 @@ def stage3(frame, cX, cY, imgl2, corners,
     #2. If drawingOther exists, display on bubble. Else, display 'nickname' is drawing message
     # tagged to cX other, cY other
 
-    if drawingOther:
+    if drawingOther != '':
     
         # decode the base64 string
         # file = open('fyp test codes/file1.txt') #drawing)
@@ -269,9 +279,9 @@ def stage3(frame, cX, cY, imgl2, corners,
         h = frame.shape[0]
 
         if corners> 0:
-            cv2.putText(frame, nicknameOther, (cX-80, cY-20), 
+            cv2.putText(frame, nicknameOther, (cXOther-80, cYOther-20), 
                         cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
-            cv2.putText(frame, 'is drawing...', (cX-100, cY+10), 
+            cv2.putText(frame, 'is drawing...', (cXOther-100, cYOther+10), 
                         cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
 
     
@@ -282,6 +292,7 @@ def stage3(frame, cX, cY, imgl2, corners,
 
 # display emojis
 def stage4(frame, emoji, emojiOther):
+    print('I am in stage 4.')
 
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
@@ -291,7 +302,8 @@ def stage4(frame, emoji, emojiOther):
                 cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
 
     #1. If emoji exists, display emoji on offset center of screen(else, do nothing)
-    if emoji is True:
+    if emoji != '':
+        print(emoji)
         # Load the font file
         font_file = 'fyp test codes\seguiemj.ttf'
         font_size = 150
@@ -343,7 +355,8 @@ def stage4(frame, emoji, emojiOther):
 
 
     #2. If emojiOther exists, display other emoji on offset center of screen (mirrored)
-    if emojiOther is True:
+    if emojiOther != '':
+
         # Load the font file
         font_file = 'fyp test codes\seguiemj.ttf'
         font_size = 150
@@ -396,6 +409,8 @@ def stage4(frame, emoji, emojiOther):
 
 # display thank you message
 def stage5(frame):
+    print('I am in stage 5')
+
     cv2.putText(frame, 'Thank you for playing!', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     cv2.putText(frame, 'Check out the archive wall outside.', (50,100),
@@ -641,15 +656,19 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         
         stage.value = getStage(state.value, stateOther.value)
 
+        # print('got stage value'  + str(stage.value))
+        # print('got drawing ' + drawing.value.decode('utf-8'))
+
         if stage.value == 1:
             stage1(frame, urlId.value.decode('utf-8'))
         elif stage.value == 2:
             stage2(frame)
         elif stage.value ==3:
-            stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing, drawingOther, nickname, nicknameOther,
-                    cXOther, cYOther)
+            stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
+                   nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
+                    cXOther.value, cYOther.value)
         elif stage.value == 4:
-            stage4(frame, emoji, emojiOther)
+            stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'))
         elif stage.value == 5:
             stage5(frame)
 
