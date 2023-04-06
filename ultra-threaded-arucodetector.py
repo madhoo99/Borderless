@@ -101,13 +101,14 @@ def nickname_get_thread(urlId, nickname, nicknameOther):
     nicknameOther.value = data['nicknameOther'].encode('utf-8')
 
 def drawing_get_thread(urlId, drawing, description):
-    time.sleep(2)
-    url = 'https://borderless-backend.herokuapp.com/drawing' + '?id=' + urlId.value.decode('utf-8')
-    
-    response = requests.get(url).json()
-    data = response['data']
-    drawing.value = data['drawing'].encode('utf-8')
-    description.value = data['description'].encode('utf-8')
+    while description.value.decode('utf-8') == '':
+        time.sleep(1)
+        url = 'https://borderless-backend.herokuapp.com/drawing' + '?id=' + urlId.value.decode('utf-8')
+        
+        response = requests.get(url).json()
+        data = response['data']
+        drawing.value = data['drawing'].encode('utf-8')
+        description.value = data['description'].encode('utf-8')
 
 def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
                   descriptionOther, emoji, emojiOther, cXOther, cYOther):
@@ -763,8 +764,8 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                 drawingGetThread.start()
                 getDrawing = False
             if isDrawingReadyOther.value and getDrawingOther:
-                drawingGetThread = Process(target=drawing_get_thread, args=(urlIdOther, drawingOther, descriptionOther))
-                drawingGetThread.start()
+                drawingGetThreadOther = Process(target=drawing_get_thread, args=(urlIdOther, drawingOther, descriptionOther))
+                drawingGetThreadOther.start()
                 getDrawingOther = False
             stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
