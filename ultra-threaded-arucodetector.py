@@ -773,16 +773,34 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         elif stage.value == 2:
             stage2(frame)
         elif stage.value ==3:
-            getNicknameAndDrawings(getNickname, getDrawing, getDrawingOther, isDrawingReady, isDrawingReadyOther,
-                           urlId, urlIdOther, nickname, nicknameOther, drawing, drawingOther,
-                           description, descriptionOther)
+            if getNickname:
+                nicknameGetThread = Process(target=nickname_get_thread, args=(urlId, nickname, nicknameOther))
+                nicknameGetThread.start()
+                getNickname = False
+            if isDrawingReady.value and getDrawing:
+                drawingGetThread = Process(target=drawing_get_thread, args=(urlId, drawing, description))
+                drawingGetThread.start()
+                getDrawing = False
+            if isDrawingReadyOther.value and getDrawingOther:
+                drawingGetThreadOther = Process(target=drawing_get_thread, args=(urlIdOther, drawingOther, descriptionOther))
+                drawingGetThreadOther.start()
+                getDrawingOther = False
             stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
                     cXOther.value, cYOther.value)
         elif stage.value == 4:
-            getNicknameAndDrawings(getNickname, getDrawing, getDrawingOther, isDrawingReady, isDrawingReadyOther,
-                           urlId, urlIdOther, nickname, nicknameOther, drawing, drawingOther,
-                           description, descriptionOther)
+            if getNickname:
+                nicknameGetThread = Process(target=nickname_get_thread, args=(urlId, nickname, nicknameOther))
+                nicknameGetThread.start()
+                getNickname = False
+            if isDrawingReady.value and getDrawing:
+                drawingGetThread = Process(target=drawing_get_thread, args=(urlId, drawing, description))
+                drawingGetThread.start()
+                getDrawing = False
+            if isDrawingReadyOther.value and getDrawingOther:
+                drawingGetThreadOther = Process(target=drawing_get_thread, args=(urlIdOther, drawingOther, descriptionOther))
+                drawingGetThreadOther.start()
+                getDrawingOther = False
             stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'), cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
                     cXOther.value, cYOther.value)
