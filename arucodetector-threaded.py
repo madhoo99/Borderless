@@ -336,7 +336,8 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
 
     #1. If emoji exists, display emoji on offset center of screen(else, do nothing)
     if emoji != '':
-        print(emoji)
+        # print(emoji)
+
         # Load the font file
         font_file = 'seguiemj.ttf'
         font_size = 150
@@ -347,7 +348,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
         #Retrieve emoji text from backend
-        text = emoji #text = drawing / drawingOther
+        text = emoji
 
         # Get the bounding box of the text
         bbox = font.getbbox(text)
@@ -375,7 +376,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         frameImg = np.zeros([h, w, 3], dtype=np.uint8)
 
         # get coordinates for center of frame
-        centerX = int(frameImg.shape[1]/2)
+        centerX = int(frameImg.shape[1]/2) -20
         centerY = int(frameImg.shape[0]/2)
 
         #draw a circle under the emoji area
@@ -428,7 +429,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         frameImg = np.zeros([h, w, 3], dtype=np.uint8)
 
         # get coordinates for center of frame
-        centerX = int(frameImg.shape[1]/2)
+        centerX = int(frameImg.shape[1]/2) +20
         centerY = int(frameImg.shape[0]/2)
 
         #draw a circle under the emoji area
@@ -566,7 +567,6 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         frame = frame[width:, :(frame.shape[1] - height)]
         
         # print(w, h)
-
 
         #detect Aruco markers in the input frame
         (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict, parameters = arucoParams)
