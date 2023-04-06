@@ -689,7 +689,7 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         
         stage.value = getStage(state.value, stateOther.value)
 
-        print('got stage value'  + str(stage.value))
+        print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
         # print('got drawing ' + drawing.value.decode('utf-8'))
 
         if stage.value == 1:
