@@ -245,20 +245,22 @@ def append_drawing(frame, cX, cY, imgl2, corners,
 
         # open the image using PIL
         drawing = Image.open(io.BytesIO(image_data))
+        drawing = np.array(drawing)
 
-        # save the image as a PNG file
-        drawing.save("output.png", "PNG")
-
-        # load and initialise output png
-        img = cv2.imread('output.png', cv2.IMREAD_UNCHANGED)
-
-        for row in img:
+        for row in drawing:
             for pixel in row:
                 if pixel[3] !=0:
                     pixel[0] = 128
                     pixel[1] = 128
                     pixel[2] = 128
 
+        drawing = Image.fromarray(drawing)
+
+        # save the image as a PNG file
+        drawing.save("output.png", "PNG")
+
+        # load and initialise output png
+        img = cv2.imread('output.png', cv2.IMREAD_UNCHANGED)
 
         img = cv2.resize(img, (imgl2*2,imgl2*2))
         img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)

@@ -185,20 +185,22 @@ def append_drawing(frame, cX, cY, imgl2, corners,
 
         # open the image using PIL
         drawing = Image.open(io.BytesIO(image_data))
+        drawing = np.array(drawing)
 
-        # save the image as a PNG file
-        drawing.save("output.png", "PNG")
-
-        # load and initialise output png
-        img = cv2.imread('output.png', cv2.IMREAD_UNCHANGED)
-
-        for row in img:
+        for row in drawing:
             for pixel in row:
                 if pixel[3] !=0:
                     pixel[0] = 128
                     pixel[1] = 128
                     pixel[2] = 128
 
+        drawing = Image.fromarray(drawing)
+
+        # save the image as a PNG file
+        drawing.save("output.png", "PNG")
+
+        # load and initialise output png
+        img = cv2.imread('output.png', cv2.IMREAD_UNCHANGED)
 
         img = cv2.resize(img, (imgl2*2,imgl2*2))
         img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
@@ -524,9 +526,9 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
 
     flag=1
 
-    scale =  1.35 #1.55
-    width = 200
-    height = 800
+    scale =  1.25 #1.55 #1.35
+    width = 100 #200
+    height = 900 #800
 
     #loop over frames from video stream
     while True:
@@ -534,10 +536,10 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         # if start_time + relativedelta(seconds=duration) > curr_time:
         if keyboard.is_pressed('p'):
             sys.stdin = open(0)
-            # scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
-            # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
-            # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
-            stage.value = int(input('Enter stage value: ') or str(stage.value))
+            scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
+            width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
+            height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
+            # stage.value = int(input('Enter stage value: ') or str(stage.value))
             # duration = int(input('Enter duration: ') or str(duration))
             
             # start_time = datetime.now(pytz.utc)
@@ -554,6 +556,7 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         
         #frame = zoom(3, frame)
 
+        #scale frame
         w = frame.shape[1]
         h = frame.shape[0]
         frame = cv2.resize(frame, (int(w * scale), int(h * scale)))
@@ -564,7 +567,10 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         # success with asus webcam
         # frame = frame[200:, :(frame.shape[1] - 1150)]
 
+        #trim frame
         frame = frame[width:, :(frame.shape[1] - height)]
+        # frame = frame[width:, height:]
+        # print(frame.shape[0], frame.shape[1])
         
         # print(w, h)
 
@@ -688,8 +694,9 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         
         stage.value = getStage(state.value, stateOther.value)
 
-        print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
+        # print('got stage value'  + str(stage.value) + '; state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
         # print('got drawing ' + drawing.value.decode('utf-8'))
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
         if stage.value == 1:
             stage1(frame, urlId.value.decode('utf-8'))
@@ -706,6 +713,9 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         elif stage.value == 5:
             stage5(frame)
 
+
+        # cv2.ROTATE_90_CLOCKWISE
+        
         #show the output frame
         cv2.imshow("Say Hello", frame)
 
