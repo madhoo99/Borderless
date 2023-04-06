@@ -504,8 +504,8 @@ def stage5(frame):
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
 
 #loop that is running the aruco program
-def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
-                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY):
+def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther):
     #construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-t", "--type", type=str,
