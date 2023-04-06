@@ -400,7 +400,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
         #Retrieve emoji text from backend
-        text = emoji #text = drawing / drawingOther
+        text = emojiOther #text = drawing / drawingOther
 
         # Get the bounding box of the text
         bbox = font.getbbox(text)
