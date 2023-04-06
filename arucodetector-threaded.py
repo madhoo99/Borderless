@@ -49,7 +49,7 @@ def sender_thread(stage, urlId, cX, cY):
 
         response = requests.post(url, json = data)
 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 
 def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
@@ -86,7 +86,7 @@ def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, draw
             if state.value > 0 or stateOther.value > 0:
                 first = False
 
-            time.sleep(1)
+            time.sleep(0.1)
 
 def getStage(state, stateOther):
     if state in [0, 1, 2]: # welcome message, nickname, drawing prompt
