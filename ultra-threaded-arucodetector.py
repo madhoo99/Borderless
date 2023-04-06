@@ -102,6 +102,7 @@ def nickname_get_thread(urlId, nickname, nicknameOther):
 
 def drawing_get_thread(urlId, drawing, description):
     while description.value.decode('utf-8') == '':
+        print('I am repeatedly querying le DB')
         time.sleep(1)
         url = 'https://borderless-backend.herokuapp.com/drawing' + '?id=' + urlId.value.decode('utf-8')
         
@@ -109,6 +110,7 @@ def drawing_get_thread(urlId, drawing, description):
         data = response['data']
         drawing.value = data['drawing'].encode('utf-8')
         description.value = data['description'].encode('utf-8')
+    print('drawign received')
 
 def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
                   descriptionOther, emoji, emojiOther, cXOther, cYOther):
@@ -505,6 +507,22 @@ def stage5(frame):
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     cv2.putText(frame, 'Check out the archive wall outside.', (50,100),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+    
+def getNicknameAndDrawings(getNickname, getDrawing, getDrawingOther, isDrawingReady, isDrawingReadyOther,
+                           urlId, urlIdOther, nickname, nicknameOther, drawing, drawingOther,
+                           description, descriptionOther):
+    if getNickname:
+        nicknameGetThread = Process(target=nickname_get_thread, args=(urlId, nickname, nicknameOther))
+        nicknameGetThread.start()
+        getNickname = False
+    if isDrawingReady.value and getDrawing:
+        drawingGetThread = Process(target=drawing_get_thread, args=(urlId, drawing, description))
+        drawingGetThread.start()
+        getDrawing = False
+    if isDrawingReadyOther.value and getDrawingOther:
+        drawingGetThreadOther = Process(target=drawing_get_thread, args=(urlIdOther, drawingOther, descriptionOther))
+        drawingGetThreadOther.start()
+        getDrawingOther = False
 
 #loop that is running the aruco program
 def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
@@ -747,7 +765,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         
         stage.value = getStage(state.value, stateOther.value)
 
-        print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
+        # print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
         # print('got drawing ' + drawing.value.decode('utf-8'))
 
         if stage.value == 1:
@@ -755,22 +773,16 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         elif stage.value == 2:
             stage2(frame)
         elif stage.value ==3:
-            if getNickname:
-                nicknameGetThread = Process(target=nickname_get_thread, args=(urlId, nickname, nicknameOther))
-                nicknameGetThread.start()
-                getNickname = False
-            if isDrawingReady.value and getDrawing:
-                drawingGetThread = Process(target=drawing_get_thread, args=(urlId, drawing, description))
-                drawingGetThread.start()
-                getDrawing = False
-            if isDrawingReadyOther.value and getDrawingOther:
-                drawingGetThreadOther = Process(target=drawing_get_thread, args=(urlIdOther, drawingOther, descriptionOther))
-                drawingGetThreadOther.start()
-                getDrawingOther = False
+            getNicknameAndDrawings(getNickname, getDrawing, getDrawingOther, isDrawingReady, isDrawingReadyOther,
+                           urlId, urlIdOther, nickname, nicknameOther, drawing, drawingOther,
+                           description, descriptionOther)
             stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
                     cXOther.value, cYOther.value)
         elif stage.value == 4:
+            getNicknameAndDrawings(getNickname, getDrawing, getDrawingOther, isDrawingReady, isDrawingReadyOther,
+                           urlId, urlIdOther, nickname, nicknameOther, drawing, drawingOther,
+                           description, descriptionOther)
             stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'), cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
                     cXOther.value, cYOther.value)
