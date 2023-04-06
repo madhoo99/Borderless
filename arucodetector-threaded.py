@@ -217,7 +217,7 @@ def stage3(frame, cX, cY, imgl2, corners,
         w = frame.shape[1]
         h = frame.shape[0]
 
-        if corners> 0:
+        if corners> 0: #only if marker is detected
             try:
                 if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
                     frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
@@ -562,9 +562,9 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
         # faces = face_cascade.detectMultiScale(gray, 1.1, 4)
 
         #verify at least one aruco marker was detected
-        imgl2=1
+        imgl2=200
 
-        if len(corners) > 0:
+        if len(corners) > 0: #if marker is detected
 
             #flatten the aruco IDs list
             ids = ids.flatten()
