@@ -149,15 +149,24 @@ def stage2(frame):
 # user has not finished, userOther has finished     // state = 4, stateOther = 5
 # both finished                                     // state, stateOther = 5
 
-#drawing - display of drawings on ar markers
 def stage3(frame, cX, cY, imgl2, corners, 
+           drawing, drawingOther, nickname, nicknameOther,
+           cXOther, cYOther):
+    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
+                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
+    
+    append_drawing(frame, cX, cY, imgl2, corners, 
+           drawing, drawingOther, nickname, nicknameOther,
+           cXOther, cYOther)
+
+
+#drawing - display of drawings on ar markers
+def append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
            cXOther, cYOther):
 
     # print('I am in stage 3.')
-    cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
-                cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
-    
+
     #1. If drawing exists, convert retrieved drawings' dataURLs to image file, else display 'nickname is drawing' message
     # tagged to cX, cY
 
@@ -310,7 +319,13 @@ def stage3(frame, cX, cY, imgl2, corners,
 # both showing emoji                            // state, stateOther = 5
 
 # display emojis
-def stage4(frame, emoji, emojiOther):
+def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners, 
+           drawing, drawingOther, nickname, nicknameOther,
+           cXOther, cYOther):
+    
+    append_drawing(frame, cX, cY, imgl2, corners, 
+           drawing, drawingOther, nickname, nicknameOther,
+           cXOther, cYOther)
 
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
@@ -686,7 +701,9 @@ def aruco_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawi
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
                     cXOther.value, cYOther.value)
         elif stage.value == 4:
-            stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'))
+            stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'), cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
+                   nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
+                    cXOther.value, cYOther.value)
         elif stage.value == 5:
             stage5(frame)
 
