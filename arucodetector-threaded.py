@@ -95,7 +95,7 @@ def getStage(state, stateOther):
         return 2
     if (state == 3 or state == 4) or (state == 5 and stateOther != 5):
         return 3
-    if state == 5 and stateOther == 5:
+    if state in [5,6] and stateOther in [5,6]:
         return 4
     if state in [7,8,9]:
         return 5
