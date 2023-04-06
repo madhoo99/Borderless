@@ -338,7 +338,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
     if emoji != '':
         print(emoji)
         # Load the font file
-        font_file = 'fyp test codes\seguiemj.ttf'
+        font_file = 'seguiemj.ttf'
         font_size = 150
         font = ImageFont.truetype(font_file, font_size)
 
@@ -360,10 +360,10 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
 
         # Save the image to disk
-        image.save('colored_emoji.png')
+        image.save('emoji.png')
 
         #load and initialise emoji image in openCV
-        emj = cv2.imread('colored_emoji.png')
+        emj = cv2.imread('emoji.png')
 
         emoji_w = int(bbox[2] - bbox[0])
         emoji_h = int(bbox[3] - bbox[1])
@@ -391,7 +391,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
     if emojiOther != '':
 
         # Load the font file
-        font_file = 'fyp test codes\seguiemj.ttf'
+        font_file = 'seguiemj.ttf'
         font_size = 150
         font = ImageFont.truetype(font_file, font_size)
 
@@ -413,10 +413,10 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
 
         # Save the image to disk
-        image.save('colored_emoji.png')
+        image.save('emojiOther.png')
 
         #load and initialise emoji image in openCV
-        emj = cv2.imread('colored_emoji.png')
+        emj = cv2.imread('emojiOther.png')
 
         emoji_w = int(bbox[2] - bbox[0])
         emoji_h = int(bbox[3] - bbox[1])
@@ -442,7 +442,6 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
 
 # display thank you message
 def stage5(frame):
-    print('I am in stage 5')
 
     cv2.putText(frame, 'Thank you for playing!', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
