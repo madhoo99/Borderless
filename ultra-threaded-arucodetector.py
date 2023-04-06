@@ -92,6 +92,7 @@ def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, 
             time.sleep(0.1)
 
 def nickname_get_thread(urlId, nickname, nicknameOther):
+    time.sleep(2)
     url = 'https://borderless-backend.herokuapp.com/nickname' + '?id=' + urlId.value.decode('utf-8')
     
     response = requests.get(url).json()
@@ -100,6 +101,7 @@ def nickname_get_thread(urlId, nickname, nicknameOther):
     nicknameOther.value = data['nicknameOther'].encode('utf-8')
 
 def drawing_get_thread(urlId, drawing, description):
+    time.sleep(2)
     url = 'https://borderless-backend.herokuapp.com/drawing' + '?id=' + urlId.value.decode('utf-8')
     
     response = requests.get(url).json()
@@ -505,7 +507,8 @@ def stage5(frame):
 
 #loop that is running the aruco program
 def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
-                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther):
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther,
+                  getNickname, getDrawing, getDrawingOther):
     #construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-t", "--type", type=str,
