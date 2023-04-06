@@ -794,7 +794,8 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
 if __name__=='__main__':
     
     arucoThread = Process(target=aruco_thread, args=(stage, urlId, urlIdOther, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
-                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther))
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther,
+                  getNickname, getDrawing, getDrawingOther))
     # talkerThread = Process(target=talker_thread, args=(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
     #               descriptionOther, emoji, emojiOther, cXOther, cYOther))
     talkerThreadLight = Process(target=talker_thread_light, args=(urlId, urlIdOther, state, stateOther, cXOther, cYOther, emoji, emojiOther, 
