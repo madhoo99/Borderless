@@ -109,6 +109,7 @@ def drawing_get_thread(urlId, drawing, description):
     print('drawign received')
 
 def drawing_save_thread(drawing, fileName):
+    print('drawing being saved')
     base64_string = drawing
 
     #pad the string with '=' to make the length a multiple of 4
@@ -135,6 +136,8 @@ def drawing_save_thread(drawing, fileName):
 
     # save the image as a PNG file
     drawing.save(fileName, "PNG")
+
+    print('done')
 
 def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
                   descriptionOther, emoji, emojiOther, cXOther, cYOther):
@@ -239,9 +242,11 @@ def stage3(frame, cX, cY, imgl2, corners,
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
-    append_drawing(frame, cX, cY, imgl2, corners, 
+    saveDrawing, saveDrawingOther = append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
            cXOther, cYOther, saveDrawing, saveDrawingOther)
+    
+    return saveDrawing, saveDrawingOther
 
 
 #drawing - display of drawings on ar markers
@@ -263,6 +268,7 @@ def append_drawing(frame, cX, cY, imgl2, corners,
 
         # load and initialise output png
         img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
+        print(img.shape)
 
         img = cv2.resize(img, (imgl2*2,imgl2*2))
         img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
@@ -351,6 +357,7 @@ def append_drawing(frame, cX, cY, imgl2, corners,
         except:
             pass
 
+    return saveDrawing, saveDrawingOther
 
     
 # no emoji                                      // state = 4, stateOther = 4
@@ -363,7 +370,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
            drawing, drawingOther, nickname, nicknameOther,
            cXOther, cYOther, saveDrawing, saveDrawingOther):
     
-    append_drawing(frame, cX, cY, imgl2, corners, 
+    saveDrawing, saveDrawingOther = append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
            cXOther, cYOther, saveDrawing, saveDrawingOther)
 
@@ -478,6 +485,8 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
 
         frame += frameImg
+
+    return saveDrawing, saveDrawingOther
 
 
 # display thank you message
@@ -771,7 +780,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                 drawingGetThreadOther = Process(target=drawing_get_thread, args=(urlIdOther, drawingOther, descriptionOther))
                 drawingGetThreadOther.start()
                 getDrawingOther = False
-            stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
+            saveDrawing, saveDrawingOther = stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
                     cXOther.value, cYOther.value, saveDrawing, saveDrawingOther)
         elif stage.value == 4:
@@ -787,7 +796,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                 drawingGetThreadOther = Process(target=drawing_get_thread, args=(urlIdOther, drawingOther, descriptionOther))
                 drawingGetThreadOther.start()
                 getDrawingOther = False
-            stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'), cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
+            saveDrawing, saveDrawingOther = stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'), cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
                     cXOther.value, cYOther.value, saveDrawing, saveDrawingOther)
         elif stage.value == 5:
