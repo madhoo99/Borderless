@@ -581,7 +581,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
     #initialize the video stream and allow the camera sensor to warm up
     print('[INFO] starting video stream...')
     #vs = VideoStream(src=config.camera).start()
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -649,6 +649,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         # frame = frame[200:, :(frame.shape[1] - 1150)]
 
         frame = frame[width:, :(frame.shape[1] - height)]
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         
         # print(w, h)
 
@@ -772,8 +773,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                     # frame += frameImg
         
         stage.value = getStage(state.value, stateOther.value)
-        
-        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    
 
         # print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
         # print('got drawing ' + drawing.value.decode('utf-8'))
