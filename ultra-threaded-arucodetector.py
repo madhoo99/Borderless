@@ -260,37 +260,39 @@ def append_drawing(frame, cX, cY, imgl2, corners,
     # tagged to cX, cY
 
     if drawing != '':
-        fileName = 'output.png'
-        if saveDrawing:
-            saveDrawingThread = Process(target=drawing_save_thread, args=(drawing, fileName))
-            saveDrawingThread.start()
-            saveDrawing = False
+        try:
+            fileName = 'output.png'
+            if saveDrawing:
+                saveDrawingThread = Process(target=drawing_save_thread, args=(drawing, fileName))
+                saveDrawingThread.start()
+                saveDrawing = False
 
-        # load and initialise output png
-        img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
-        print(img.shape)
+            # load and initialise output png
+            img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
+            print(img.shape)
 
-        img = cv2.resize(img, (imgl2*2,imgl2*2))
-        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+            img = cv2.resize(img, (imgl2*2,imgl2*2))
+            img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 
-        w = frame.shape[1]
-        h = frame.shape[0]
+            w = frame.shape[1]
+            h = frame.shape[0]
 
-        #blank frame to place image on
-        frameImg = np.zeros([h, w, 3], dtype=np.uint8)
-        blankFrame = frameImg
+            #blank frame to place image on
+            frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+            
 
-        try:                      
+                              
             if cX > imgl2 and cY > imgl2 and cX < w-imgl2 and cY < h -imgl2:
                 frame = cv2.circle(frame, (cX,cY-3), int(imgl2-2), (255, 255, 255), -1) 
                 frameImg[cY-imgl2:cY+imgl2, cX-imgl2:cX+imgl2] = img
             # cv2.imshow('image frame', frameImg)
 
+            frame += frameImg
+
         except: 
-            frameImg = blankFrame
+            pass
 
         # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
-        frame += frameImg
     else:
 
         w = frame.shape[1]
@@ -311,38 +313,38 @@ def append_drawing(frame, cX, cY, imgl2, corners,
     # tagged to cX other, cY other
 
     if drawingOther != '':
-    
-        fileName = 'outputother.png'
-        if saveDrawingOther:
-            saveDrawingThread = Process(target=drawing_save_thread, args=(drawingOther, fileName))
-            saveDrawingThread.start()
-            saveDrawingOther = False
-
-        # load and initialise output png
-        img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
-
-        img = cv2.resize(img, (imgl2*2,imgl2*2))
-        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
-
-        w = frame.shape[1]
-        h = frame.shape[0]
-
-        #blank frame to place image on
-        frameImg = np.zeros([h, w, 3], dtype=np.uint8)
-        blankFrame = frameImg
-
         try:
-                            
+            fileName = 'outputother.png'
+            if saveDrawingOther:
+                saveDrawingThread = Process(target=drawing_save_thread, args=(drawingOther, fileName))
+                saveDrawingThread.start()
+                saveDrawingOther = False
+
+            # load and initialise output png
+            img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
+            print(img.shape)
+
+            img = cv2.resize(img, (imgl2*2,imgl2*2))
+            img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+
+            w = frame.shape[1]
+            h = frame.shape[0]
+
+            #blank frame to place image on
+            frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+               
             if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
                 frame = cv2.circle(frame, (cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
                 frameImg[cYOther-imgl2:cYOther+imgl2, cXOther-imgl2:cXOther+imgl2] = img
             # cv2.imshow('image frame', frameImg)
 
+            frame += frameImg
+
         except: 
-            frameImg = blankFrame
+            pass
 
         # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
-        frame += frameImg
+        
     
     else:
         w = frame.shape[1]
