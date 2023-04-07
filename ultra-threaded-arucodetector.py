@@ -42,10 +42,6 @@ isDrawingReady = Value('b', False)
 isDrawingReadyOther = Value('b', False)
 stage = Value('i', 1)
 
-getDrawing = True
-getDrawingOther = True
-getNickname = True
-
 
 #retrieve data from the app and set the states accordingly in openCV
 
@@ -111,6 +107,34 @@ def drawing_get_thread(urlId, drawing, description):
         drawing.value = data['drawing'].encode('utf-8')
         description.value = data['description'].encode('utf-8')
     print('drawign received')
+
+def drawing_save_thread(drawing, fileName):
+    base64_string = drawing
+
+    #pad the string with '=' to make the length a multiple of 4
+    while len(base64_string) % 4 != 0:
+        base64_string += "="
+
+    # Remove the "data:image/png;base64," prefix from the string
+    base64_string = base64_string.replace("data:image/png;base64,", "")
+
+    image_data = base64.b64decode(base64_string)
+
+    # open the image using PIL
+    drawing = Image.open(io.BytesIO(image_data))
+    drawing = np.array(drawing)
+
+    for row in drawing:
+        for pixel in row:
+            if pixel[3] !=0:
+                pixel[0] = 128
+                pixel[1] = 128
+                pixel[2] = 128
+
+    drawing = Image.fromarray(drawing)
+
+    # save the image as a PNG file
+    drawing.save(fileName, "PNG")
 
 def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
                   descriptionOther, emoji, emojiOther, cXOther, cYOther):
@@ -211,19 +235,19 @@ def stage2(frame):
 
 def stage3(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther):
+           cXOther, cYOther, saveDrawing, saveDrawingOther):
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
     append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther)
+           cXOther, cYOther, saveDrawing, saveDrawingOther)
 
 
 #drawing - display of drawings on ar markers
 def append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther):
+           cXOther, cYOther, saveDrawing, saveDrawingOther):
 
     # print('I am in stage 3.')
 
@@ -231,36 +255,14 @@ def append_drawing(frame, cX, cY, imgl2, corners,
     # tagged to cX, cY
 
     if drawing != '':
-        # decode the base64 string
-        base64_string = drawing
-
-        #pad the string with '=' to make the length a multiple of 4
-        while len(base64_string) % 4 != 0:
-            base64_string += "="
-
-        # Remove the "data:image/png;base64," prefix from the string
-        base64_string = base64_string.replace("data:image/png;base64,", "")
-
-        image_data = base64.b64decode(base64_string)
-
-        # open the image using PIL
-        drawing = Image.open(io.BytesIO(image_data))
-        drawing = np.array(drawing)
-
-        for row in drawing:
-            for pixel in row:
-                if pixel[3] !=0:
-                    pixel[0] = 128
-                    pixel[1] = 128
-                    pixel[2] = 128
-
-        drawing = Image.fromarray(drawing)
-
-        # save the image as a PNG file
-        drawing.save("output.png", "PNG")
+        fileName = 'output.png'
+        if saveDrawing:
+            saveDrawingThread = Process(target=drawing_save_thread, args=(drawing, fileName))
+            saveDrawingThread.start()
+            saveDrawing = False
 
         # load and initialise output png
-        img = cv2.imread('output.png', cv2.IMREAD_UNCHANGED)
+        img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
 
         img = cv2.resize(img, (imgl2*2,imgl2*2))
         img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
@@ -304,38 +306,14 @@ def append_drawing(frame, cX, cY, imgl2, corners,
 
     if drawingOther != '':
     
-        # decode the base64 string
-        # file = open('fyp test codes/file1.txt') #drawing)
-        # base64_string = file.read()
-        # file.close()
-
-        base64_string = drawingOther
-
-        #pad the string with '=' to make the length a multiple of 4
-        while len(base64_string) % 4 != 0:
-            base64_string += "="
-
-        # Remove the "data:image/png;base64," prefix from the string
-        base64_string = base64_string.replace("data:image/png;base64,", "")
-
-        image_data = base64.b64decode(base64_string)
-
-        # open the image using PIL
-        drawing = Image.open(io.BytesIO(image_data))
-
-        # save the image as a PNG file
-        drawing.save("outputother.png", "PNG")
+        fileName = 'outputother.png'
+        if saveDrawingOther:
+            saveDrawingThread = Process(target=drawing_save_thread, args=(drawingOther, fileName))
+            saveDrawingThread.start()
+            saveDrawingOther = False
 
         # load and initialise output png
-        img = cv2.imread('outputother.png', cv2.IMREAD_UNCHANGED)
-
-        for row in img:
-            for pixel in row:
-                if pixel[3] !=0:
-                    pixel[0] = 128
-                    pixel[1] = 128
-                    pixel[2] = 128
-
+        img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
 
         img = cv2.resize(img, (imgl2*2,imgl2*2))
         img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
@@ -383,11 +361,11 @@ def append_drawing(frame, cX, cY, imgl2, corners,
 # display emojis
 def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther):
+           cXOther, cYOther, saveDrawing, saveDrawingOther):
     
     append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther)
+           cXOther, cYOther, saveDrawing, saveDrawingOther)
 
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
@@ -528,8 +506,7 @@ def getNicknameAndDrawings(getNickname, getDrawing, getDrawingOther, isDrawingRe
 
 #loop that is running the aruco program
 def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
-                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther,
-                  getNickname, getDrawing, getDrawingOther):
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther):
     #construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-t", "--type", type=str,
@@ -605,6 +582,13 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
     scale =  1.35 #1.55
     width = 200
     height = 800
+
+    # globals local to aruco thread
+    getDrawing = True
+    getDrawingOther = True
+    getNickname = True
+    saveDrawing = True
+    saveDrawingOther = True
 
     #loop over frames from video stream
     while True:
@@ -789,7 +773,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                 getDrawingOther = False
             stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
-                    cXOther.value, cYOther.value)
+                    cXOther.value, cYOther.value, saveDrawing, saveDrawingOther)
         elif stage.value == 4:
             if getNickname:
                 nicknameGetThread = Process(target=nickname_get_thread, args=(urlId, nickname, nicknameOther))
@@ -805,13 +789,14 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                 getDrawingOther = False
             stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'), cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
-                    cXOther.value, cYOther.value)
+                    cXOther.value, cYOther.value, saveDrawing, saveDrawingOther)
         elif stage.value == 5:
             stage5(frame)
             getDrawing = True
             getDrawingOther = True
             getNickname = True
-
+            saveDrawing = True
+            saveDrawingOther = True
 
         #show the output frame
         cv2.imshow("Say Hello", frame)
@@ -830,8 +815,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
 if __name__=='__main__':
     
     arucoThread = Process(target=aruco_thread, args=(stage, urlId, urlIdOther, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
-                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther,
-                  getNickname, getDrawing, getDrawingOther))
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther))
     # talkerThread = Process(target=talker_thread, args=(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
     #               descriptionOther, emoji, emojiOther, cXOther, cYOther))
     talkerThreadLight = Process(target=talker_thread_light, args=(urlId, urlIdOther, state, stateOther, cXOther, cYOther, emoji, emojiOther, 
