@@ -424,7 +424,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         frameImg = np.zeros([h, w, 3], dtype=np.uint8)
 
         # get coordinates for center of frame
-        centerX = int(frameImg.shape[1]/2)
+        centerX = int(frameImg.shape[1]/2) - 200
         centerY = int(frameImg.shape[0]/2)
 
         #draw a circle under the emoji area
@@ -477,7 +477,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
         frameImg = np.zeros([h, w, 3], dtype=np.uint8)
 
         # get coordinates for center of frame
-        centerX = int(frameImg.shape[1]/2)
+        centerX = int(frameImg.shape[1]/2) + 200
         centerY = int(frameImg.shape[0]/2)
 
         #draw a circle under the emoji area
@@ -590,9 +590,9 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
 
     flag=1
 
-    scale =  1.35 #1.55
-    width = 200
-    height = 800
+    scale =  1.25 #1.55 #1.35
+    width = 100 #200
+    height = 900 #800
 
     # globals local to aruco thread
     getDrawing = True
@@ -761,6 +761,8 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                     # frame += frameImg
         
         stage.value = getStage(state.value, stateOther.value)
+        
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
         # print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
         # print('got drawing ' + drawing.value.decode('utf-8'))
