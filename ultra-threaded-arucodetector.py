@@ -590,9 +590,14 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
 
     flag=1
 
-    scale =  1.25 #1.55 #1.35
+    scale =  1.1 #1.55 #1.35
     width = 100 #200
     height = 900 #800
+
+    # for booth 1:
+    # scale = 1.03
+    # width = 160
+    # height = 820
 
     # globals local to aruco thread
     getDrawing = True
@@ -607,10 +612,10 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         # if start_time + relativedelta(seconds=duration) > curr_time:
         if keyboard.is_pressed('p'):
             sys.stdin = open(0)
-            # scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
-            # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
-            # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
-            stage.value = int(input('Enter stage value: ') or str(stage.value))
+            scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
+            width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
+            height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
+            # stage.value = int(input('Enter stage value: ') or str(stage.value))
             # duration = int(input('Enter duration: ') or str(duration))
             
             # start_time = datetime.now(pytz.utc)
