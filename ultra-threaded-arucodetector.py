@@ -190,14 +190,14 @@ def getStage(state, stateOther):
     return -1
 
 #start frame 1 - welcome message and display QR code    // state = 0, 1, 2
-def stage1(frame, urlId):
+def stage1(frame, urlIdOther):
     # print('I am in stage 1.')
 
     cv2.putText(frame, 'Welcome! Press start on device to begin.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
     URL = 'https://borderless-frontend-new.herokuapp.com/home?id=' #Add your URL
-    URL += urlId
+    URL += urlIdOther
     # print(URL)
 
     code = QR.make(URL)
@@ -581,7 +581,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
     #initialize the video stream and allow the camera sensor to warm up
     print('[INFO] starting video stream...')
     #vs = VideoStream(src=config.camera).start()
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -593,6 +593,12 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
     scale =  1.25 #1.55 #1.35
     width = 100 #200
     height = 900 #800
+
+    # logitech
+    # scale= 1.03
+    # width = 0
+    # height = 820
+    
 
     # globals local to aruco thread
     getDrawing = True
@@ -607,10 +613,10 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         # if start_time + relativedelta(seconds=duration) > curr_time:
         if keyboard.is_pressed('p'):
             sys.stdin = open(0)
-            # scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
-            # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
-            # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
-            stage.value = int(input('Enter stage value: ') or str(stage.value))
+            scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
+            width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
+            height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
+            # stage.value = int(input('Enter stage value: ') or str(stage.value))
             # duration = int(input('Enter duration: ') or str(duration))
             
             # start_time = datetime.now(pytz.utc)
@@ -768,7 +774,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         # print('got drawing ' + drawing.value.decode('utf-8'))
 
         if stage.value == 1:
-            stage1(frame, urlId.value.decode('utf-8'))
+            stage1(frame, urlIdOther.value.decode('utf-8'))
         elif stage.value == 2:
             stage2(frame)
         elif stage.value ==3:
