@@ -87,6 +87,7 @@ def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, 
             #     break
 
             if reset.value:
+                print('breaks')
                 break
 
             if state.value > 0 or stateOther.value > 0:
@@ -183,15 +184,15 @@ def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, draw
             time.sleep(0.1)
 
 def getStage(state, stateOther):
-    if state in [0, 1, 2]: # welcome message, nickname, drawing prompt
+    if stateOther in [0, 1, 2]: # welcome message, nickname, drawing prompt
         return 1
-    if state == 3 and state > stateOther:  
+    if stateOther == 3 and stateOther > state:  
         return 2
-    if (state == 3 or state == 4) or (state == 5 and stateOther != 5):
+    if (stateOther == 3 or stateOther == 4) or (stateOther == 5 and state != 5):
         return 3
-    if state in [5,6] and stateOther in [5,6]:
+    if stateOther in [5,6] and state in [5,6]:
         return 4
-    if state in [7,8,9]:
+    if stateOther in [7,8,9]:
         return 5
     
     return -1
@@ -779,11 +780,11 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                     # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
                     # frame += frameImg
         
-        # stage.value = getStage(state.value, stateOther.value)
+        stage.value = getStage(state.value, stateOther.value)
 
-        stage.value = getStage(stateOther.value, state.value)
+        #stage.value = getStage(stateOther.value, state.value)
 
-        # print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
+        print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
         # print('got drawing ' + drawing.value.decode('utf-8'))
 
         if stage.value == 1:
