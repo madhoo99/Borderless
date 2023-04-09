@@ -42,6 +42,8 @@ isDrawingReady = Value('b', False)
 isDrawingReadyOther = Value('b', False)
 stage = Value('i', 1)
 
+reset = Value('b', False)
+
 
 #retrieve data from the app and set the states accordingly in openCV
 
@@ -54,7 +56,8 @@ def sender_thread(urlId, cX, cY):
 
         time.sleep(0.1)
 
-def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, emoji, emojiOther, isDrawingReady, isDrawingReadyOther):
+def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, emoji, emojiOther, isDrawingReady, isDrawingReadyOther,
+                        reset):
     while True:
         url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
         # print(url_id)
@@ -78,8 +81,12 @@ def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, 
             isDrawingReady.value = data['isDrawingReady']
             isDrawingReadyOther.value = data['isDrawingReadyOther']
             urlIdOther.value = data['urlIdOther'].encode('utf-8')
+            reset.value = data['reset']
 
-            if not first and state.value == 0 and stateOther.value == 0:
+            # if not first and state.value == 0 and stateOther.value == 0:
+            #     break
+
+            if reset.value:
                 break
 
             if state.value > 0 or stateOther.value > 0:
@@ -772,8 +779,9 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                     # frame = cv2.addWeighted(frame, 1.0, frameImg, 1.0, 0)
                     # frame += frameImg
         
-        stage.value = getStage(state.value, stateOther.value)
-    
+        # stage.value = getStage(state.value, stateOther.value)
+
+        stage.value = getStage(stateOther.value, state.value)
 
         # print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
         # print('got drawing ' + drawing.value.decode('utf-8'))
@@ -843,7 +851,7 @@ if __name__=='__main__':
     # talkerThread = Process(target=talker_thread, args=(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
     #               descriptionOther, emoji, emojiOther, cXOther, cYOther))
     talkerThreadLight = Process(target=talker_thread_light, args=(urlId, urlIdOther, state, stateOther, cXOther, cYOther, emoji, emojiOther, 
-                                                                  isDrawingReady, isDrawingReadyOther))
+                                                                  isDrawingReady, isDrawingReadyOther, reset))
     senderThread = Process(target=sender_thread, args=(urlId, cX, cY))
 
     arucoThread.start()
