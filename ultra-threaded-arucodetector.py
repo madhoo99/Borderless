@@ -250,13 +250,15 @@ def stage2(frame):
 
 def stage3(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther, saveDrawing, saveDrawingOther):
+           cXOther, cYOther, saveDrawing, saveDrawingOther,
+           cX_shift, cY_shift):
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
     saveDrawing, saveDrawingOther = append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther, saveDrawing, saveDrawingOther)
+           cXOther, cYOther, saveDrawing, saveDrawingOther,
+           cX_shift, cY_shift)
     
     return saveDrawing, saveDrawingOther
 
@@ -264,12 +266,20 @@ def stage3(frame, cX, cY, imgl2, corners,
 #drawing - display of drawings on ar markers
 def append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther, saveDrawing, saveDrawingOther):
+           cXOther, cYOther, saveDrawing, saveDrawingOther,
+           cX_shift, cY_shift):
 
     # print('I am in stage 3.')
 
     #1. If drawing exists, convert retrieved drawings' dataURLs to image file, else display 'nickname is drawing' message
     # tagged to cX, cY
+    cXOther += cX_shift
+    cYOther += cY_shift
+
+    cXOther = int(cXOther)
+    cYOther = int(cYOther)
+
+    # print(cXOther, cYOther)
 
     if drawing != '':
         try:
@@ -382,11 +392,13 @@ def append_drawing(frame, cX, cY, imgl2, corners,
 # display emojis
 def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther, saveDrawing, saveDrawingOther):
+           cXOther, cYOther, saveDrawing, saveDrawingOther,
+           cX_shift, cY_shift):
     
     saveDrawing, saveDrawingOther = append_drawing(frame, cX, cY, imgl2, corners, 
            drawing, drawingOther, nickname, nicknameOther,
-           cXOther, cYOther, saveDrawing, saveDrawingOther)
+           cXOther, cYOther, saveDrawing, saveDrawingOther,
+           cX_shift, cY_shift)
 
     cv2.putText(frame, 'Draw something that reminds you of your childhood.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
@@ -655,6 +667,9 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
     width = 100 #200
     height = 900 #800
 
+    cX_shift = 0
+    cY_shift = 0
+
     # for booth 1:
     # scale = 1.03
     # width = 160
@@ -683,8 +698,8 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
             # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
             # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
             stage.value = int(input('Enter stage value: ') or str(stage.value))
-            cXOther = float(input('Enter cXOther, current {}: '.format(str(cXOther))) or str(scale))
-            cYOther = float(input('Enter cYOther, current {}: '.format(str(cYOther))) or str(scale))
+            cX_shift = float(input('Enter cXOther shift, current {}: '.format(str(cX_shift))) or str(cX_shift))
+            cY_shift = float(input('Enter cYOther shift, current {}: '.format(str(cY_shift))) or str(cY_shift))
             # duration = int(input('Enter duration: ') or str(duration))
             
             # start_time = datetime.now(pytz.utc)
@@ -860,7 +875,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                 getDrawingOther = False
             saveDrawing, saveDrawingOther = stage3(frame, cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
-                    cXOther.value, cYOther.value, saveDrawing, saveDrawingOther)
+                    cXOther.value, cYOther.value, saveDrawing, saveDrawingOther, cX_shift, cY_shift)
         elif stage.value == 4:
             if getNickname:
                 nicknameGetThread = Process(target=nickname_get_thread, args=(urlId, nickname, nicknameOther))
@@ -876,7 +891,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
                 getDrawingOther = False
             saveDrawing, saveDrawingOther = stage4(frame, emoji.value.decode('utf-8'), emojiOther.value.decode('utf-8'), cX.value, cY.value, imgl2, len(corners), drawing.value.decode('utf-8'), drawingOther.value.decode('utf-8'), 
                    nickname.value.decode('utf-8'), nicknameOther.value.decode('utf-8'),
-                    cXOther.value, cYOther.value, saveDrawing, saveDrawingOther)
+                    cXOther.value, cYOther.value, saveDrawing, saveDrawingOther, cX_shift, cY_shift)
         elif stage.value == 5:
             stage5(frame)
             getDrawing = True
