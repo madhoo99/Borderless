@@ -346,8 +346,8 @@ def append_drawing(frame, cX, cY, imgl2, corners,
             frameImg = np.zeros([h, w, 3], dtype=np.uint8)
                
             if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
-                frame = cv2.circle(frame, (cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
-                frameImg[cYOther-imgl2:cYOther+imgl2, cXOther-imgl2:cXOther+imgl2] = img
+                frame = cv2.circle(frame, (w-cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
+                frameImg[cYOther-imgl2:cYOther+imgl2, w-cXOther-imgl2:w-cXOther+imgl2] = img
             # cv2.imshow('image frame', frameImg)
 
             frame += frameImg
@@ -363,10 +363,10 @@ def append_drawing(frame, cX, cY, imgl2, corners,
         h = frame.shape[0]
         try:
             if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
-                cv2.circle(frame, (cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
-                cv2.putText(frame, nicknameOther, (cXOther-80, cYOther-20), 
+                cv2.circle(frame, (w-cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
+                cv2.putText(frame, nicknameOther, (w-cXOther-80, cYOther-20), 
                             cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
-                cv2.putText(frame, 'is drawing...', (cXOther-100, cYOther+10), 
+                cv2.putText(frame, 'is drawing...', (w-cXOther-100, cYOther+10), 
                             cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
         except:
             pass
@@ -683,6 +683,8 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
             # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
             # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
             stage.value = int(input('Enter stage value: ') or str(stage.value))
+            cXOther = float(input('Enter cXOther, current {}: '.format(str(cXOther))) or str(scale))
+            cYOther = float(input('Enter cYOther, current {}: '.format(str(cYOther))) or str(scale))
             # duration = int(input('Enter duration: ') or str(duration))
             
             # start_time = datetime.now(pytz.utc)
