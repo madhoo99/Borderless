@@ -58,9 +58,9 @@ def sender_thread(urlId, cX, cY):
 
 def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, emoji, emojiOther, isDrawingReady, isDrawingReadyOther,
                         reset):
-    try:
-
-        while True:
+    
+    while True:
+        try:
             url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
             # print(url_id)
             urlId.value = url_id['id'].encode('utf-8')
@@ -96,8 +96,8 @@ def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, 
                     first = False
 
                 time.sleep(0.1)
-    except Exception as e:
-        print(e)
+        except Exception as e:
+            print(e)
 
 def nickname_get_thread(urlId, nickname, nicknameOther):
     time.sleep(2)
