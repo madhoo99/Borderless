@@ -590,7 +590,7 @@ def getNicknameAndDrawings(getNickname, getDrawing, getDrawingOther, isDrawingRe
 
 #loop that is running the aruco program
 def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
-                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther):
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther, reset):
     #construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-t", "--type", type=str,
@@ -900,6 +900,14 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
             saveDrawing = True
             saveDrawingOther = True
 
+        if reset.value:
+            print('resetting these vars')
+            getDrawing = True
+            getDrawingOther = True
+            getNickname = True
+            saveDrawing = True
+            saveDrawingOther = True
+
         #show the output frame
         cv2.imshow("Say Hello", frame)
 
@@ -917,7 +925,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
 if __name__=='__main__':
     
     arucoThread = Process(target=aruco_thread, args=(stage, urlId, urlIdOther, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
-                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther))
+                  descriptionOther, emoji, emojiOther, cXOther, cYOther, cX, cY, isDrawingReady, isDrawingReadyOther, reset))
     # talkerThread = Process(target=talker_thread, args=(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
     #               descriptionOther, emoji, emojiOther, cXOther, cYOther))
     talkerThreadLight = Process(target=talker_thread_light, args=(urlId, urlIdOther, state, stateOther, cXOther, cYOther, emoji, emojiOther, 
