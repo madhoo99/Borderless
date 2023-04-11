@@ -58,42 +58,46 @@ def sender_thread(urlId, cX, cY):
 
 def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, emoji, emojiOther, isDrawingReady, isDrawingReadyOther,
                         reset):
-    while True:
-        url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
-        # print(url_id)
-        urlId.value = url_id['id'].encode('utf-8')
+    try:
 
-        url = 'https://borderless-backend.herokuapp.com/openCVDataLight' + '?id=' + urlId.value.decode('utf-8')
-        # print(url)
-
-        first = True
-        
         while True:
-        
-            response = requests.get(url).json()
-            data = response['data']
-            state.value = data['state']
-            stateOther.value = data['stateOther']
-            cXOther.value = data['cXOther']
-            cYOther.value = data['cYOther']
-            emoji.value = data['emoji'].encode('utf-8')
-            emojiOther.value = data['emojiOther'].encode('utf-8')
-            isDrawingReady.value = data['isDrawingReady']
-            isDrawingReadyOther.value = data['isDrawingReadyOther']
-            urlIdOther.value = data['urlIdOther'].encode('utf-8')
-            reset.value = data['reset']
+            url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
+            # print(url_id)
+            urlId.value = url_id['id'].encode('utf-8')
 
-            # if not first and state.value == 0 and stateOther.value == 0:
-            #     break
+            url = 'https://borderless-backend.herokuapp.com/openCVDataLight' + '?id=' + urlId.value.decode('utf-8')
+            # print(url)
 
-            if reset.value:
-                print('breaks')
-                break
+            first = True
+            
+            while True:
+            
+                response = requests.get(url).json()
+                data = response['data']
+                state.value = data['state']
+                stateOther.value = data['stateOther']
+                cXOther.value = data['cXOther']
+                cYOther.value = data['cYOther']
+                emoji.value = data['emoji'].encode('utf-8')
+                emojiOther.value = data['emojiOther'].encode('utf-8')
+                isDrawingReady.value = data['isDrawingReady']
+                isDrawingReadyOther.value = data['isDrawingReadyOther']
+                urlIdOther.value = data['urlIdOther'].encode('utf-8')
+                reset.value = data['reset']
 
-            if state.value > 0 or stateOther.value > 0:
-                first = False
+                # if not first and state.value == 0 and stateOther.value == 0:
+                #     break
 
-            time.sleep(0.1)
+                if reset.value:
+                    print('breaks')
+                    break
+
+                if state.value > 0 or stateOther.value > 0:
+                    first = False
+
+                time.sleep(0.1)
+    except Exception as e:
+        print(e)
 
 def nickname_get_thread(urlId, nickname, nicknameOther):
     time.sleep(2)
