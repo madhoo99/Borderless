@@ -66,7 +66,6 @@ def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, 
             urlId.value = url_id['id'].encode('utf-8')
 
             url = 'https://borderless-backend.herokuapp.com/openCVDataLight' + '?id=' + urlId.value.decode('utf-8')
-            # print(url)
 
             first = True
             
@@ -153,6 +152,7 @@ def drawing_save_thread(drawing, fileName):
 
 def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, drawing, drawingOther, description,
                   descriptionOther, emoji, emojiOther, cXOther, cYOther):
+
     while True:
         url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
         # print(url_id)
@@ -160,7 +160,6 @@ def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, draw
 
         url = 'https://borderless-backend.herokuapp.com/openCVData?id='
         url += urlId.value.decode('utf-8')
-        # print(url)
 
         first = True
 
@@ -210,6 +209,7 @@ def stage1(frame, urlIdOther):
     
     URL = 'https://borderless-frontend-new.herokuapp.com/home?id=' #Add your URL
     URL += urlIdOther
+    
     # print(URL)
 
     code = QR.make(URL)
@@ -281,7 +281,7 @@ def append_drawing(frame, cX, cY, imgl2, corners,
 
             # load and initialise output png
             img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
-            print(img.shape)
+            # print(img.shape)
 
             img = cv2.resize(img, (imgl2*2,imgl2*2))
             img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
@@ -334,7 +334,7 @@ def append_drawing(frame, cX, cY, imgl2, corners,
 
             # load and initialise output png
             img = cv2.imread(fileName, cv2.IMREAD_UNCHANGED)
-            print(img.shape)
+            # print(img.shape)
 
             img = cv2.resize(img, (imgl2*2,imgl2*2))
             img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
@@ -396,109 +396,158 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
                 cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
 
     #1. If emoji exists, display emoji on offset center of screen(else, do nothing)
+    # if emoji  '':
+
     if emoji != '':
-        print(emoji)
-        # Load the font file
-        font_file = 'seguiemj.ttf'
-        font_size = 150
-        font = ImageFont.truetype(font_file, font_size)
 
-        # Create a new RGBA image with a transparent background
-        width, height = 200, 200
-        image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+        try:
 
-        #Retrieve emoji text from backend
-        text = emoji #text = drawing / drawingOther
+            # print('emoji = ' + emoji)
 
-        # Get the bounding box of the text
-        bbox = font.getbbox(text)
+            # Load the font file
+            font_file = 'seguiemj.ttf'
+            font_size = 150
+            font = ImageFont.truetype(font_file, font_size)
 
-        # Create a new image with dimensions based on the bounding box
-        image = Image.new("RGBA", (bbox[2] - bbox[0], bbox[3] - bbox[1]), (255, 255, 255, 0))
+            # Create a new RGBA image with a transparent background
+            width, height = 200, 200
+            image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
-        # Draw the text on the image
-        draw = ImageDraw.Draw(image)
-        draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
+            #Retrieve emoji text from backend
+            text = emoji #text = drawing / drawingOther
 
-        # Save the image to disk
-        image.save('emoji.png')
+            # Get the bounding box of the text
+            bbox = font.getbbox(text) 
 
-        #load and initialise emoji image in openCV
-        emj = cv2.imread('emoji.png')
+            # Create a new image with dimensions based on the bounding box
+            image = Image.new("RGBA", (bbox[2] - bbox[0], bbox[3] - bbox[1]), (255, 255, 255, 0))
 
-        emoji_w = int(bbox[2] - bbox[0])
-        emoji_h = int(bbox[3] - bbox[1])
+            # Draw the text on the image
+            draw = ImageDraw.Draw(image)
+            draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
 
-        w = frame.shape[1]
-        h = frame.shape[0]
+            # Save the image to disk
+            bbox1 = (image.getbbox())
+            image = image.crop(bbox1)
+            image.save('emoji.png')
 
-        # blank frame to place image on
-        frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+            #load and initialise emoji image in openCV
+            emj = cv2.imread('emoji.png')
 
-        # get coordinates for center of frame
-        centerX = int(frameImg.shape[1]/2) - 200
-        centerY = int(frameImg.shape[0]/2)
+            # emoji_w = int(bbox1[2] - bbox1[0])
+            # emoji_h = int(bbox1[3] - bbox1[1])
 
-        #draw a circle under the emoji area
-        cv2.circle(frame, (centerX, centerY), int(emoji_w/2)-18, (0, 0,0), -1)
+            emoji_w = int(emj.shape[1])
+            emoji_h = int(emj.shape[0])
 
-        # #display emoji in the center of window
-        frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
+            w = frame.shape[1]
+            h = frame.shape[0]
 
-        frame += frameImg
+            # blank frame to place image on
+            frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+
+            # get coordinates for center of frame
+            centerX = int(frameImg.shape[1]/2) - 200
+            centerY = int(frameImg.shape[0]/2)
+
+            #draw a circle under the emoji area
+            cv2.circle(frame, (centerX, centerY), int(emoji_h/2), (0, 0,0), -1)
+
+            # #display emoji in the center of window
+            frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
+
+            frame += frameImg
+        except:
+            
+            # blank frame to place image on
+            frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+
+            # get coordinates for center of frame
+            centerX = int(frameImg.shape[1]/2) - 200
+            centerY = int(frameImg.shape[0]/2)
+
+            # display text
+            cv2.putText(frame, 'Emoji', (centerX -50, centerY - 20), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 1)
+            cv2.putText(frame, 'not available', (centerX-100, centerY + 20), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 1)
 
 
     #2. If emojiOther exists, display other emoji on offset center of screen (mirrored)
     if emojiOther != '':
 
-        # Load the font file
-        font_file = 'seguiemj.ttf'
-        font_size = 150
-        font = ImageFont.truetype(font_file, font_size)
+        try:
+        
+            # print('emojiOther = ' + emojiOther)
 
-        # Create a new RGBA image with a transparent background
-        width, height = 200, 200
-        image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            # Load the font file
+            font_file = 'seguiemj.ttf'
+            font_size = 150
+            font = ImageFont.truetype(font_file, font_size)
 
-        #Retrieve emoji text from backend
-        text = emojiOther #text = drawing / drawingOther
+            # Create a new RGBA image with a transparent background
+            width, height = 200, 200
+            image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
-        # Get the bounding box of the text
-        bbox = font.getbbox(text)
+            #Retrieve emoji text from backend
+            text = emojiOther #text = drawing / drawingOther
 
-        # Create a new image with dimensions based on the bounding box
-        image = Image.new("RGBA", (bbox[2] - bbox[0], bbox[3] - bbox[1]), (255, 255, 255, 0))
+            # Get the bounding box of the text
+            bbox = font.getbbox(text) 
 
-        # Draw the text on the image
-        draw = ImageDraw.Draw(image)
-        draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
+            # Create a new image with dimensions based on the bounding box
+            image = Image.new("RGBA", (bbox[2] - bbox[0], bbox[3] - bbox[1]), (255, 255, 255, 0))
 
-        # Save the image to disk
-        image.save('emojiOther.png')
+            # Draw the text on the image
+            draw = ImageDraw.Draw(image)
+            draw.text((0, -bbox[1]), text, font=font, embedded_color=True)
 
-        #load and initialise emoji image in openCV
-        emj = cv2.imread('emojiOther.png')
+            # Save the image to disk
+            bbox1 = (image.getbbox())
+            image = image.crop(bbox1)
+            image.save('emojiOther.png')
 
-        emoji_w = int(bbox[2] - bbox[0])
-        emoji_h = int(bbox[3] - bbox[1])
+            #load and initialise emoji image in openCV
+            emj = cv2.imread('emojiOther.png')
 
-        w = frame.shape[1]
-        h = frame.shape[0]
+            # emoji_w = int(bbox1[2] - bbox1[0])
+            # emoji_h = int(bbox1[3] - bbox1[1])
 
-        # blank frame to place image on
-        frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+            emoji_w = int(emj.shape[1])
+            emoji_h = int(emj.shape[0])
 
-        # get coordinates for center of frame
-        centerX = int(frameImg.shape[1]/2) + 200
-        centerY = int(frameImg.shape[0]/2)
+            w = frame.shape[1]
+            h = frame.shape[0]
 
-        #draw a circle under the emoji area
-        cv2.circle(frame, (centerX, centerY), int(emoji_w/2)-18, (0, 0,0), -1)
+            # blank frame to place image on
+            frameImg = np.zeros([h, w, 3], dtype=np.uint8)
 
-        # #display emoji in the center of window
-        frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
+            # get coordinates for center of frame
+            centerX = int(frameImg.shape[1]/2) + 200
+            centerY = int(frameImg.shape[0]/2)
 
-        frame += frameImg
+            #draw a circle under the emoji area
+            cv2.circle(frame, (centerX, centerY), int(emoji_h/2), (0, 0,0), -1)
+
+            # #display emoji in the center of window
+            frameImg[int(centerY- (emoji_h/2)):int(centerY+ (emoji_h/2)), int(centerX- (emoji_w/2)):int(centerX+ (emoji_w/2))] = emj
+
+            frame += frameImg
+        except:
+            # blank frame to place image on
+            frameImg = np.zeros([h, w, 3], dtype=np.uint8)
+
+            # get coordinates for center of frame
+            centerX = int(frameImg.shape[1]/2) + 200
+            centerY = int(frameImg.shape[0]/2)
+
+            # display text
+            cv2.putText(frame, 'Emoji', (centerX -50, centerY -20), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 1)
+            cv2.putText(frame, 'not available', (centerX-100, centerY + 20), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 1)
+
+
 
     return saveDrawing, saveDrawingOther
 
@@ -631,9 +680,9 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         if keyboard.is_pressed('p'):
             sys.stdin = open(0)
             scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
-            width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
-            height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
-            # stage.value = int(input('Enter stage value: ') or str(stage.value))
+            # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
+            # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
+            stage.value = int(input('Enter stage value: ') or str(stage.value))
             # duration = int(input('Enter duration: ') or str(duration))
             
             # start_time = datetime.now(pytz.utc)
@@ -786,9 +835,8 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         
         stage.value = getStage(state.value, stateOther.value)
 
-        #stage.value = getStage(stateOther.value, state.value)
+        # stage.value = getStage(stateOther.value, state.value)
 
-        print('got stage value'  + str(stage.value) + 'state, stateOther = ' + str(state.value) + ',' + str(stateOther.value))
         # print('got drawing ' + drawing.value.decode('utf-8'))
 
         if stage.value == 1:
