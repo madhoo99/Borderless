@@ -654,7 +654,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
     #initialize the video stream and allow the camera sensor to warm up
     print('[INFO] starting video stream...')
     #vs = VideoStream(src=config.camera).start()
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -695,8 +695,8 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         if keyboard.is_pressed('p'):
             sys.stdin = open(0)
             scale = float(input('Enter scale, current {}: '.format(str(scale))) or str(scale))
-            # width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
-            # height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
+            width = int(input('Enter width trim start, current {}: '.format(str(width))) or str(width))
+            height = int(input('Enter height trim start, current {}: '.format(str(height))) or str(height))
             stage.value = int(input('Enter stage value: ') or str(stage.value))
             cX_shift = float(input('Enter cXOther shift, current {}: '.format(str(cX_shift))) or str(cX_shift))
             cY_shift = float(input('Enter cYOther shift, current {}: '.format(str(cY_shift))) or str(cY_shift))
