@@ -855,6 +855,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         # stage.value = getStage(stateOther.value, state.value)
 
         # print('got drawing ' + drawing.value.decode('utf-8'))
+        print(isDrawingReady.value)
 
         if stage.value == 1:
             stage1(frame, urlIdOther.value.decode('utf-8'))
@@ -907,6 +908,15 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
             getNickname = True
             saveDrawing = True
             saveDrawingOther = True
+
+            description.value = ''.encode('utf-8')
+            descriptionOther.value = ''.encode('utf-8')
+            drawing.value = ''.encode('utf-8')
+            drawingOther.value = ''.encode('utf-8')
+            nickname.value = ''.encode('utf-8')
+            nicknameOther.value = ''.encode('utf-8')
+            emoji.value = ''.encode('utf-8')
+            emojiOther.value = ''.encode('utf-8')
 
         #show the output frame
         cv2.imshow("Say Hello", frame)
