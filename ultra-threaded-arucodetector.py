@@ -654,7 +654,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
     #initialize the video stream and allow the camera sensor to warm up
     print('[INFO] starting video stream...')
     #vs = VideoStream(src=config.camera).start()
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
