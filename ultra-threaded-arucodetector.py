@@ -334,7 +334,7 @@ def append_drawing(frame, cX, cY, imgl2, corners,
     #2. If drawingOther exists, display on other bubble. Else, display 'nickname' is drawing message
     # tagged to cX other, cY other
 
-    print((w-cXOther,cYOther-3))
+    #print((w-cXOther,cYOther-3))
 
     if drawingOther != '':
         try:
@@ -406,7 +406,7 @@ def stage4(frame, emoji, emojiOther, cX, cY, imgl2, corners,
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     cv2.putText(frame, "React to the other user's drawing!", (50,100),
                 cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
-    cv2.putText(frame, "Feel free to use gestures, facial expressions, or emojis.", (50,130),
+    cv2.putText(frame, "Feel free to use gestures or facial expressions.", (50,130),
                 cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 2)
 
     #1. If emoji exists, display emoji on offset center of screen(else, do nothing)
@@ -667,7 +667,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
 
     scale =  1.1 #1.55 #1.35
     width = 100 #200
-    height = 900 #800
+    height = 800 #900
 
     cX_shift = 0
     cY_shift = 0
