@@ -334,6 +334,8 @@ def append_drawing(frame, cX, cY, imgl2, corners,
     #2. If drawingOther exists, display on other bubble. Else, display 'nickname' is drawing message
     # tagged to cX other, cY other
 
+    print((w-cXOther,cYOther-3))
+
     if drawingOther != '':
         try:
             fileName = 'outputother.png'
@@ -355,9 +357,9 @@ def append_drawing(frame, cX, cY, imgl2, corners,
             #blank frame to place image on
             frameImg = np.zeros([h, w, 3], dtype=np.uint8)
                
-            if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
-                frame = cv2.circle(frame, (w-cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
-                frameImg[cYOther-imgl2:cYOther+imgl2, w-cXOther-imgl2:w-cXOther+imgl2] = img
+            # if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
+            frame = cv2.circle(frame, (w-cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
+            frameImg[cYOther-imgl2:cYOther+imgl2, w-cXOther-imgl2:w-cXOther+imgl2] = img
             # cv2.imshow('image frame', frameImg)
 
             frame += frameImg
@@ -372,12 +374,12 @@ def append_drawing(frame, cX, cY, imgl2, corners,
         w = frame.shape[1]
         h = frame.shape[0]
         try:
-            if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
-                cv2.circle(frame, (w-cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
-                cv2.putText(frame, nicknameOther, (w-cXOther-80, cYOther-20), 
-                            cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
-                cv2.putText(frame, 'is drawing...', (w-cXOther-100, cYOther+10), 
-                            cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+            # if cXOther > imgl2 and cYOther > imgl2 and cXOther < w-imgl2 and cYOther < h -imgl2:
+            cv2.circle(frame, (w-cXOther,cYOther-3), int(imgl2-2), (255, 255, 255), -1) 
+            cv2.putText(frame, nicknameOther, (w-cXOther-80, cYOther-20), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
+            cv2.putText(frame, 'is drawing...', (w-cXOther-100, cYOther+10), 
+                        cv2.FONT_HERSHEY_PLAIN, 2, (0,0,0), 2)
         except:
             pass
 
@@ -855,7 +857,7 @@ def aruco_thread(stage, urlId, urlIdOther, state, stateOther, nickname, nickname
         # stage.value = getStage(stateOther.value, state.value)
 
         # print('got drawing ' + drawing.value.decode('utf-8'))
-        print(isDrawingReady.value)
+        # print(isDrawingReady.value)
 
         if stage.value == 1:
             stage1(frame, urlIdOther.value.decode('utf-8'))
