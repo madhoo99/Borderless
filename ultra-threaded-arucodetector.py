@@ -49,7 +49,7 @@ reset = Value('b', False)
 
 def sender_thread(urlId, cX, cY):
     while True:
-        url = 'https://borderless-backend.herokuapp.com/setcXcY'
+        url = 'https://fyp-backend-be46dfd2133e.herokuapp.com/setcXcY'
         data = {'id': urlId.value.decode('utf-8'), 'cX': cX.value, 'cY': cY.value}
 
         response = requests.post(url, json = data)
@@ -61,11 +61,11 @@ def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, 
     
     while True:
         try:
-            url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
+            url_id = requests.get('https://fyp-backend-be46dfd2133e.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
             # print(url_id)
             urlId.value = url_id['id'].encode('utf-8')
 
-            url = 'https://borderless-backend.herokuapp.com/openCVDataLight' + '?id=' + urlId.value.decode('utf-8')
+            url = 'https://fyp-backend-be46dfd2133e.herokuapp.com/openCVDataLight' + '?id=' + urlId.value.decode('utf-8')
 
             first = True
             
@@ -100,7 +100,7 @@ def talker_thread_light(urlId, urlIdOther, state, stateOther, cXOther, cYOther, 
 
 def nickname_get_thread(urlId, nickname, nicknameOther):
     time.sleep(2)
-    url = 'https://borderless-backend.herokuapp.com/nickname' + '?id=' + urlId.value.decode('utf-8')
+    url = 'https://fyp-backend-be46dfd2133e.herokuapp.com/nickname' + '?id=' + urlId.value.decode('utf-8')
     
     response = requests.get(url).json()
     data = response['data']
@@ -111,13 +111,13 @@ def drawing_get_thread(urlId, drawing, description):
     while description.value.decode('utf-8') == '':
         print('I am repeatedly querying le DB')
         time.sleep(1)
-        url = 'https://borderless-backend.herokuapp.com/drawing' + '?id=' + urlId.value.decode('utf-8')
+        url = 'https://fyp-backend-be46dfd2133e.herokuapp.com/drawing' + '?id=' + urlId.value.decode('utf-8')
         
         response = requests.get(url).json()
         data = response['data']
         drawing.value = data['drawing'].encode('utf-8')
         description.value = data['description'].encode('utf-8')
-    print('drawign received')
+    print('drawing received')
 
 def drawing_save_thread(drawing, fileName):
     print('drawing being saved')
@@ -154,11 +154,11 @@ def talker_thread(stage, urlId, state, stateOther, nickname, nicknameOther, draw
                   descriptionOther, emoji, emojiOther, cXOther, cYOther):
 
     while True:
-        url_id = requests.get('https://borderless-backend.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
+        url_id = requests.get('https://fyp-backend-be46dfd2133e.herokuapp.com/QR').json() # Get unique URL and ID (string of numbers after '?id=')
         # print(url_id)
         urlId.value = url_id['id'].encode('utf-8')
 
-        url = 'https://borderless-backend.herokuapp.com/openCVData?id='
+        url = 'https://fyp-backend-be46dfd2133e.herokuapp.com/openCVData?id='
         url += urlId.value.decode('utf-8')
 
         first = True
@@ -207,7 +207,7 @@ def stage1(frame, urlIdOther):
     cv2.putText(frame, 'Welcome! Press start on device to begin.', (50,50),
                 cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 2)
     
-    URL = 'https://borderless-frontend-new.herokuapp.com/home?id=' #Add your URL
+    URL = 'https://fyp-frontend-39b514692c67.herokuapp.com/home?id=' #Add your URL
     URL += urlIdOther
     
     # print(URL)
